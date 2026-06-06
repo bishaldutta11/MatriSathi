@@ -81,21 +81,21 @@ Matri Sathi runs **two parallel AI models** simultaneously on the live camera fe
 ### Model 1 — Infant Sleep Position Classifier
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│              INFANT SLEEP POSITION MODEL  (infant_sleep_position.pt) │
-│                                                                       │
-│  Base Architecture : YOLOv8  (You Only Look Once — Version 8)        │
-│  Task Type         : Object Detection + Classification                │
-│  Input Resolution  : 640 × 480 (live webcam frame)                  │
-│  Inference Freq.   : Every 10 seconds (throttled, cached between)    │
-│  Confidence Thresh.: 0.40 (40% minimum to accept detection)          │
-│  Output Classes    : 2                                                │
-│                        ├── Class 0 → SUPINE  (Back)  ✅ Safe        │
-│                        └── Class 1 → PRONE   (Stomach) ⚠️ Danger    │
-│                                                                       │
-│  Output Schema:                                                       │
+┌─────────────────────────────────────────────────────────────────────────┐
+│              INFANT SLEEP POSITION MODEL  (infant_sleep_position.pt)    │
+│                                                                         │
+│  Base Architecture : YOLOv8  (You Only Look Once — Version 8)           │
+│  Task Type         : Object Detection + Classification                  │
+│  Input Resolution  : 640 × 480 (live webcam frame)                      │
+│  Inference Freq.   : Every 10 seconds (throttled, cached between)       │
+│  Confidence Thresh.: 0.40 (40% minimum to accept detection)             │
+│  Output Classes    : 2                                                  │
+│                        ├── Class 0 → SUPINE  (Back)  ✅ Safe            │
+│                        └── Class 1 → PRONE   (Stomach) ⚠️ Danger        │
+│                                                                         │
+│  Output Schema:                                                         │
 │    { position: "Back"|"Prone", confidence: 0.0–1.0, box: [x1,y1,x2,y2] }│
-└─────────────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 **How it works:**
@@ -134,23 +134,23 @@ Sleep position doesn't change in milliseconds. Throttling saves significant CPU/
 ### Model 2 — Activity Surveillance (YOLOv8s)
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│         ACTIVITY & MOTION SURVEILLANCE MODEL  (yolov8s.pt)          │
-│                                                                       │
-│  Base Architecture : YOLOv8s (Small variant — speed optimized)      │
+┌──────────────────────────────────────────────────────────────────────┐
+│         ACTIVITY & MOTION SURVEILLANCE MODEL  (yolov8s.pt)           │
+│                                                                      │
+│  Base Architecture : YOLOv8s (Small variant — speed optimized)       │
 │  Task Type         : Object Detection + Multi-object Tracking        │
 │  Dataset           : COCO (80 classes pretrained)                    │
-│  Target Class      : Class 0 — Person (infant in frame)             │
-│  Input Resolution  : 640 × 480 (live webcam frame)                  │
+│  Target Class      : Class 0 — Person (infant in frame)              │
+│  Input Resolution  : 640 × 480 (live webcam frame)                   │
 │  Inference Freq.   : Every frame (~20 FPS)                           │
 │  Confidence Thresh.: 0.50 (50% minimum for person detection)         │
 │  Tracking          : ByteTrack (persist=True, unique IDs per person) │
-│                                                                       │
-│  Motion States:                                                       │
-│    ┌─ ACTIVE      → avg_pixel_diff > 4.5  (moving)                  │
+│                                                                      │
+│  Motion States:                                                      │
+│    ┌─ ACTIVE      → avg_pixel_diff > 4.5  (moving)                   │
 │    ├─ LOW MOVEMENT→ inactive for 2–5 seconds                         │
-│    └─ INACTIVE    → inactive for ≥ 5 seconds  ⚠️ ALERT              │
-└─────────────────────────────────────────────────────────────────────┘
+│    └─ INACTIVE    → inactive for ≥ 5 seconds  ⚠️ ALERT               │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 **How it works:**
@@ -214,25 +214,25 @@ inactive_time ≥ 5s  ────────────────→  INACT
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        MATRI SATHI SYSTEM                               │
 │                                                                         │
-│   ┌──────────┐     ┌─────────────────────────────────────────────┐     │
-│   │  WEBCAM  │────▶│              CameraWorker Thread            │     │
+│   ┌──────────┐     ┌─────────────────────────────────────────────┐      │
+│   │  WEBCAM  │────▶│              CameraWorker Thread           │      │
 │   │  (USB 0) │     │                                             │     │
-│   └──────────┘     │  ┌─────────────────┐  ┌─────────────────┐  │     │
-│                    │  │ YOLOv8s Tracker │  │  Sleep Classifier│  │     │
-│                    │  │  (Every Frame)  │  │  (Every 10s)    │  │     │
-│                    │  └────────┬────────┘  └────────┬────────┘  │     │
+│   └──────────┘     │  ┌─────────────────┐  ┌─────────────────┐   │     │
+│                    │  │ YOLOv8s Tracker │  │ Sleep Classifier│   │     │
+│                    │  │  (Every Frame)  │  │  (Every 10s)    │   │     │
+│                    │  └────────┬────────┘  └────────┬────────┘   │     │
 │                    │           │                     │           │     │
 │                    │           ▼                     ▼           │     │
 │                    │  ┌──────────────────────────────────────┐   │     │
 │                    │  │         Shared State Object          │   │     │
-│                    │  │  { motion, sleep, infant_detected,  │   │     │
+│                    │  │  { motion, sleep, infant_detected,   │   │     │
 │                    │  │    logs, is_simulation }             │   │     │
 │                    │  └──────────────┬───────────────────────┘   │     │
-│                    │                 │ thread-safe lock()         │     │
-│                    │           MJPEG Frame                        │     │
+│                    │                 │ thread-safe lock()        │     │
+│                    │           MJPEG Frame                       │     │
 │                    └───────────┬─────┴───────────────────────────┘     │
 │                                │                                        │
-│                    ┌───────────▼─────────────────────────────┐         │
+│                    ┌───────────▼──────────────────────────────┐         │
 │                    │         FastAPI Server (port 8000)       │         │
 │                    │                                          │         │
 │                    │  GET /             → Index.html          │         │
@@ -241,15 +241,15 @@ inactive_time ≥ 5s  ────────────────→  INACT
 │                    │  GET /sleep_pos    → sleep_position.html │         │
 │                    │  POST /api/predict → single image infer  │         │
 │                    │  WS  /ws           → Real-time JSON state│         │
-│                    └───────────┬─────────────────────────────┘         │
+│                    └───────────┬──────────────────────────────┘         │
 │                                │                                        │
-│             ┌──────────────────┼──────────────────────┐                │
+│             ┌──────────────────┼──────────────────────┐                 │
 │             ▼                  ▼                       ▼                │
-│      ┌─────────────┐   ┌──────────────┐   ┌────────────────────┐      │
-│      │  Browser A  │   │  Browser B   │   │  Browser C (mobile)│      │
-│      │  WebSocket  │   │  WebSocket   │   │  WebSocket         │      │
-│      │  MJPEG Feed │   │  MJPEG Feed  │   │  MJPEG Feed        │      │
-│      └─────────────┘   └──────────────┘   └────────────────────┘      │
+│      ┌─────────────┐   ┌──────────────┐   ┌────────────────────┐        │
+│      │  Browser A  │   │  Browser B   │   │  Browser C (mobile)│        │
+│      │  WebSocket  │   │  WebSocket   │   │  WebSocket         │        │
+│      │  MJPEG Feed │   │  MJPEG Feed  │   │  MJPEG Feed        │        │
+│      └─────────────┘   └──────────────┘   └────────────────────┘        │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
