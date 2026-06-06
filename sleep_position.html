@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sleep Position Monitor — MatriSathi</title>
+<meta name="description" content="Upload or capture an infant image to instantly classify sleep position using AI. Detects safe (Back) and dangerous (Prone) sleeping positions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+  --bg: #0a0a0f;
+  --bg2: #0f0f1a;
+  --bg3: #141426;
+  --surface: rgba(255,255,255,0.04);
+  --surface2: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.08);
+  --text: #f0eeff;
+  --text2: #9890b8;
+  --text3: #5a5278;
+  --accent: #c084fc;
+  --accent2: #818cf8;
+  --accent3: #34d399;
+  --accent4: #fb923c;
+  --accent5: #f472b6;
+  --glow: rgba(192,132,252,0.3);
+  --glow2: rgba(129,140,248,0.2);
+  --danger: #f87171;
+  --warn: #fbbf24;
+  --card-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  --radius: 20px;
+  --radius-sm: 12px;
+  --nav-h: 70px;
+}
+[data-theme="light"] {
+  --bg: #faf8ff;
+  --bg2: #f2eeff;
+  --bg3: #ebe4ff;
+  --surface: rgba(0,0,0,0.04);
+  --surface2: rgba(0,0,0,0.07);
+  --border: rgba(0,0,0,0.1);
+  --text: #1a1230;
+  --text2: #5a4a7a;
+  --text3: #9880c0;
+  --accent: #7c3aed;
+  --accent2: #4f46e5;
+  --accent3: #059669;
+  --accent4: #ea580c;
+  --accent5: #db2777;
+  --glow: rgba(124,58,237,0.2);
+  --glow2: rgba(79,70,229,0.15);
+  --danger: #dc2626;
+  --warn: #d97706;
+  --card-shadow: 0 8px 40px rgba(100,50,200,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+.ambient {
+  position: fixed; pointer-events: none; border-radius: 50%; filter: blur(80px); z-index: 0;
+}
+.amb1 { width: 600px; height: 600px; top: -200px; left: -100px; background: radial-gradient(circle, rgba(192,132,252,0.12) 0%, transparent 70%); animation: floatAmb 12s ease-in-out infinite; }
+.amb2 { width: 500px; height: 500px; bottom: 10%; right: -150px; background: radial-gradient(circle, rgba(129,140,248,0.1) 0%, transparent 70%); animation: floatAmb 15s ease-in-out infinite reverse; }
+.amb3 { width: 400px; height: 400px; top: 50%; left: 40%; background: radial-gradient(circle, rgba(52,211,153,0.07) 0%, transparent 70%); animation: floatAmb 10s ease-in-out infinite 3s; }
+@keyframes floatAmb {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(30px,-20px) scale(1.05); }
+  66% { transform: translate(-20px,30px) scale(0.95); }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+/* ===== NAVBAR ===== */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px;
+  background: rgba(10,10,15,0.7);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  z-index: 1000;
+}
+[data-theme="light"] .navbar { background: rgba(250,248,255,0.8); }
+.logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.logo-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 20px var(--glow);
+  overflow: hidden;
+}
+.logo-icon img { width: 100%; height: 100%; object-fit: cover; }
+.logo-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.logo-sub {
+  font-size: 10px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase;
+  display: block; margin-top: -4px; font-family: 'JetBrains Mono', monospace;
+  -webkit-text-fill-color: var(--text3);
+}
+.nav-links { display: flex; gap: 32px; list-style: none; }
+.nav-links a {
+  text-decoration: none; color: var(--text2); font-size: 14px; font-weight: 500;
+  letter-spacing: 0.5px; position: relative; padding: 4px 0;
+  transition: color 0.3s ease;
+}
+.nav-links a::after {
+  content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transform: scaleX(0); transition: transform 0.3s ease;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-links a:hover::after, .nav-links a.active::after { transform: scaleX(1); }
+.nav-links a.active { color: var(--accent); }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+
+.theme-btn {
+  position: relative; width: 64px; height: 34px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 17px; cursor: pointer;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.theme-btn:hover { border-color: var(--accent); box-shadow: 0 0 20px var(--glow); transform: scale(1.05); }
+.theme-track { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 4px; }
+.theme-thumb {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; line-height: 1;
+  transform: translateX(0);
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 12px var(--glow);
+  position: relative; z-index: 1;
+}
+[data-theme="light"] .theme-thumb { transform: translateX(30px); background: linear-gradient(135deg, #f59e0b, #ef4444); }
+
+/* ===== MAIN CONTENT ===== */
+main {
+  padding-top: calc(var(--nav-h) + 60px);
+  padding-bottom: 80px;
+  position: relative; z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 40px;
+  padding-right: 40px;
+}
+
+/* ===== PAGE HEADER ===== */
+.page-header {
+  text-align: center;
+  margin-bottom: 60px;
+  animation: fadeSlideUp 0.8s ease both;
+}
+.page-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px;
+  background: rgba(52,211,153,0.1);
+  border: 1px solid rgba(52,211,153,0.25);
+  border-radius: 20px; font-size: 12px;
+  color: var(--accent3); font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px; margin-bottom: 20px;
+}
+.page-badge-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent3);
+  animation: pulseDot 2s ease infinite;
+}
+@keyframes pulseDot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.7); }
+}
+.page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(36px, 5vw, 60px);
+  line-height: 1.1; font-weight: 900;
+  margin-bottom: 16px;
+}
+.page-title em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--accent3), var(--accent2), var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.page-sub {
+  font-size: 16px; color: var(--text2); line-height: 1.8;
+  max-width: 550px; margin: 0 auto;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== MAIN GRID ===== */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 32px;
+  align-items: start;
+}
+
+/* ===== UPLOAD CARD ===== */
+.upload-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  animation: fadeSlideUp 0.8s ease 0.1s both;
+  transition: all 0.3s ease;
+}
+.upload-card:hover { border-color: rgba(192,132,252,0.2); }
+
+.upload-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px; font-weight: 700;
+  margin-bottom: 8px;
+}
+.upload-sub { font-size: 14px; color: var(--text2); margin-bottom: 28px; }
+
+/* ===== DROP ZONE ===== */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+  background: var(--bg3);
+  margin-bottom: 24px;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(192,132,252,0.05);
+  transform: scale(1.01);
+  box-shadow: 0 0 40px var(--glow);
+}
+.drop-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.drop-icon {
+  font-size: 52px;
+  margin-bottom: 16px;
+  display: block;
+  transition: transform 0.3s ease;
+}
+.drop-zone:hover .drop-icon { transform: scale(1.1) translateY(-4px); }
+.drop-text {
+  font-size: 16px; font-weight: 600; color: var(--text);
+  margin-bottom: 6px;
+}
+.drop-sub { font-size: 13px; color: var(--text3); }
+.drop-formats {
+  display: flex; justify-content: center; gap: 8px; margin-top: 16px; flex-wrap: wrap;
+}
+.format-tag {
+  padding: 3px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11px; color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ===== IMAGE PREVIEW ===== */
+.preview-area {
+  display: none;
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg3);
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+}
+.preview-area.visible { display: block; }
+.preview-img {
+  width: 100%; max-height: 400px; object-fit: contain;
+  display: block;
+}
+.preview-overlay-box {
+  position: absolute;
+  border: 3px solid var(--accent3);
+  border-radius: 6px;
+  box-shadow: 0 0 20px rgba(52,211,153,0.4);
+  transition: all 0.4s ease;
+  display: none;
+  pointer-events: none;
+}
+.preview-overlay-box.danger {
+  border-color: var(--danger);
+  box-shadow: 0 0 20px rgba(248,113,113,0.5);
+}
+.preview-overlay-label {
+  position: absolute;
+  top: -28px; left: 0;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(52,211,153,0.2);
+  border: 1px solid var(--accent3);
+  color: var(--accent3);
+}
+.preview-overlay-label.danger {
+  background: rgba(248,113,113,0.2);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.preview-clear {
+  position: absolute; top: 12px; right: 12px;
+  width: 32px; height: 32px;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+  border: 1px solid var(--border); border-radius: 50%;
+  color: var(--text2); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease; z-index: 5;
+}
+.preview-clear:hover { background: rgba(248,113,113,0.3); color: var(--danger); border-color: var(--danger); }
+
+/* ===== ACTION BUTTONS ===== */
+.action-row {
+  display: flex; gap: 12px;
+}
+.btn-analyze {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 16px 28px;
+  background: linear-gradient(135deg, var(--accent3), #059669);
+  color: white; border: none; border-radius: 50px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 4px 24px rgba(52,211,153,0.3);
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative; overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-analyze:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 40px rgba(52,211,153,0.5);
+}
+.btn-analyze:disabled {
+  opacity: 0.5; cursor: not-allowed;
+}
+.btn-analyze.loading {
+  pointer-events: none;
+}
+.btn-analyze .btn-spinner {
+  display: none;
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.btn-analyze.loading .btn-spinner { display: block; }
+.btn-analyze.loading .btn-label { display: none; }
+
+.btn-reset {
+  padding: 16px 20px;
+  background: var(--surface2);
+  color: var(--text2); border: 1px solid var(--border);
+  border-radius: 50px;
+  font-size: 15px; cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-reset:hover { background: var(--danger); color: white; border-color: var(--danger); transform: translateY(-2px); }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== RESULT AREA ===== */
+.result-area {
+  display: none;
+  margin-top: 28px;
+  animation: fadeSlideUp 0.5s ease both;
+}
+.result-area.visible { display: block; }
+
+.result-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px;
+}
+.result-icon { font-size: 32px; }
+.result-title-group { flex: 1; }
+.result-label {
+  font-size: 11px; font-family: 'JetBrains Mono', monospace;
+  color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.result-position {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px; font-weight: 700;
+}
+.result-position.safe { color: var(--accent3); }
+.result-position.danger { color: var(--danger); }
+.result-position.unknown { color: var(--text2); }
+
+.result-badge {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+.badge-safe { background: rgba(52,211,153,0.15); color: var(--accent3); border: 1px solid rgba(52,211,153,0.4); }
+.badge-danger { background: rgba(248,113,113,0.15); color: var(--danger); border: 1px solid rgba(248,113,113,0.4); animation: pulseBadge 1.5s ease infinite; }
+.badge-unknown { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+
+@keyframes pulseBadge {
+  0%,100% { box-shadow: none; }
+  50% { box-shadow: 0 0 20px rgba(248,113,113,0.4); }
+}
+
+.confidence-bar-wrap { margin: 16px 0; }
+.conf-label-row {
+  display: flex; justify-content: space-between;
+  font-size: 12px; color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 8px;
+}
+.conf-label-row span:last-child { color: var(--accent2); font-weight: 600; }
+.conf-track {
+  height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden;
+}
+.conf-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent3), var(--accent2));
+  transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+}
+.conf-fill.danger-fill {
+  background: linear-gradient(90deg, var(--danger), var(--warn));
+}
+
+.result-alert {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 16px 20px;
+  border-radius: var(--radius-sm);
+  margin-top: 16px;
+  animation: alertPulse 2s ease infinite;
+}
+.result-alert.alert-safe {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.3);
+}
+.result-alert.alert-danger {
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.35);
+}
+.result-alert.alert-unknown {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+@keyframes alertPulse {
+  0%,100% { border-color: inherit; }
+  50% { box-shadow: 0 0 16px rgba(52,211,153,0.15); }
+}
+.alert-alert-icon { font-size: 22px; flex-shrink: 0; }
+.alert-content { flex: 1; }
+.alert-content-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.alert-content-sub { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+.all-predictions {
+  margin-top: 20px;
+}
+.pred-title {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.pred-title::before { content: ''; display: block; width: 12px; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.pred-list { display: flex; flex-direction: column; gap: 8px; }
+.pred-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg3); border-radius: 8px;
+  border-left: 3px solid transparent;
+}
+.pred-item.pred-safe { border-left-color: var(--accent3); }
+.pred-item.pred-danger { border-left-color: var(--danger); }
+.pred-pos { flex: 1; font-weight: 600; font-size: 14px; }
+.pred-conf {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  padding: 2px 10px; border-radius: 20px;
+}
+.pred-conf.safe-conf { background: rgba(52,211,153,0.1); color: var(--accent3); }
+.pred-conf.danger-conf { background: rgba(248,113,113,0.1); color: var(--danger); }
+
+.no-detection {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 32px 24px; text-align: center;
+  background: var(--bg3); border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.no-det-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.7; }
+.no-det-title { font-weight: 600; margin-bottom: 8px; }
+.no-det-sub { font-size: 13px; color: var(--text2); }
+
+/* ===== SIDEBAR PANELS ===== */
+.sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+  animation: fadeSlideUp 0.8s ease 0.2s both;
+  transition: all 0.3s ease;
+}
+.panel:hover { background: var(--surface2); border-color: rgba(192,132,252,0.3); }
+.panel-title {
+  font-size: 12px; font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase; letter-spacing: 1.5px; color: var(--text3);
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-title::before { content: ''; display: block; width: 12px; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+/* Position Guide */
+.pos-guide { display: flex; flex-direction: column; gap: 12px; }
+.pos-guide-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px;
+  background: var(--bg3); border-radius: 10px;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+.pos-guide-item:hover { border-color: var(--border); background: var(--surface2); }
+.pos-guide-icon { font-size: 28px; flex-shrink: 0; }
+.pos-guide-info { flex: 1; }
+.pos-guide-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+.pos-guide-desc { font-size: 12px; color: var(--text3); line-height: 1.5; }
+.pos-guide-badge {
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 600;
+  flex-shrink: 0;
+}
+.pos-safe-badge { background: rgba(52,211,153,0.15); color: var(--accent3); border: 1px solid rgba(52,211,153,0.3); }
+.pos-danger-badge { background: rgba(248,113,113,0.15); color: var(--danger); border: 1px solid rgba(248,113,113,0.3); }
+
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-item {
+  text-align: center; padding: 16px 12px;
+  background: var(--bg3); border-radius: 10px;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+.stat-item:hover { border-color: rgba(192,132,252,0.3); transform: translateY(-2px); }
+.stat-val {
+  font-size: 28px; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.stat-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+/* Tips */
+.tip-list { display: flex; flex-direction: column; gap: 10px; }
+.tip-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 10px 14px;
+  background: var(--bg3); border-radius: 8px;
+  font-size: 13px; color: var(--text2); line-height: 1.5;
+}
+.tip-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 5px; flex-shrink: 0; }
+
+/* History */
+.history-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+.hist-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg3); border-radius: 8px;
+  font-size: 12px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.hist-item:hover { transform: translateX(4px); background: var(--surface2); }
+.hist-item.safe { border-left-color: var(--accent3); }
+.hist-item.danger { border-left-color: var(--danger); }
+.hist-item.no-det { border-left-color: var(--text3); }
+.hist-thumb {
+  width: 36px; height: 36px; border-radius: 6px;
+  object-fit: cover; flex-shrink: 0;
+  background: var(--surface2);
+}
+.hist-info { flex: 1; }
+.hist-pos { font-weight: 600; }
+.hist-time { color: var(--text3); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+.hist-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace; flex-shrink: 0;
+}
+.hist-badge.safe { background: rgba(52,211,153,0.1); color: var(--accent3); }
+.hist-badge.danger { background: rgba(248,113,113,0.1); color: var(--danger); }
+.hist-badge.no-det { background: var(--surface2); color: var(--text3); }
+.hist-empty { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; }
+
+/* ===== PROCESSING OVERLAY ===== */
+.processing-overlay {
+  display: none;
+  position: absolute; inset: 0;
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(4px);
+  border-radius: var(--radius-sm);
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 10;
+}
+.processing-overlay.active { display: flex; }
+.proc-orb {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(192,132,252,0.4), rgba(52,211,153,0.2), transparent);
+  border: 2px solid rgba(192,132,252,0.4);
+  animation: procSpin 2s linear infinite;
+  margin-bottom: 20px;
+  position: relative;
+}
+.proc-orb::after {
+  content: '🔍';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  animation: procSpin 2s linear infinite reverse;
+}
+@keyframes procSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.proc-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; color: var(--accent);
+  letter-spacing: 1px;
+}
+.proc-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
+
+/* ===== TOAST ===== */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px; z-index: 2000;
+  display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+}
+.toast {
+  padding: 12px 20px; border-radius: 12px;
+  background: var(--bg2); border: 1px solid var(--border);
+  font-size: 13px; max-width: 280px;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(12px);
+  animation: toastIn 0.4s ease, toastOut 0.4s ease 2.6s both;
+  pointer-events: all;
+}
+.toast.success { border-color: rgba(52,211,153,0.4); }
+.toast.warn { border-color: rgba(251,146,60,0.4); }
+.toast.error { border-color: rgba(248,113,113,0.4); }
+@keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(20px); } }
+
+/* ===== FOOTER ===== */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 40px;
+  text-align: center; color: var(--text3);
+  font-size: 13px; position: relative; z-index: 1;
+  margin-top: 60px;
+}
+footer span { color: var(--accent); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  main { padding-left: 20px; padding-right: 20px; }
+  .main-grid { grid-template-columns: 1fr; }
+  .navbar { padding: 0 20px; }
+  .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Ambient Background -->
+<div class="ambient amb1"></div>
+<div class="ambient amb2"></div>
+<div class="ambient amb3"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="/" class="logo">
+    <div class="logo-icon"><img src="assets/logo.png" alt="Matri Sathi Logo"></div>
+    <div>
+      <div class="logo-text">Matri Sathi</div>
+      <span class="logo-sub">Child Guardian</span>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/#live">Live Feed</a></li>
+    <li><a href="/sleep_position" class="active">Sleep Monitor</a></li>
+    <li><a href="/about">About Us</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">
+      <div class="theme-track">
+        <div class="theme-thumb">
+          <span id="themeIcon">🌙</span>
+        </div>
+      </div>
+    </button>
+  </div>
+</nav>
+
+<main>
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-badge">
+      <div class="page-badge-dot"></div>
+      AI Sleep Position Analysis
+    </div>
+    <h1 class="page-title">Sleep Position<br><em>Monitor</em></h1>
+    <p class="page-sub">Upload or capture an infant image to instantly classify sleep position. Our AI detects safe and dangerous sleeping patterns to protect your baby.</p>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="main-grid">
+    <!-- Upload & Result Card -->
+    <div class="upload-card">
+      <div class="upload-title">Analyze Sleep Position</div>
+      <p class="upload-sub">Upload a clear photo of the infant. The model will detect and classify the sleeping position in seconds.</p>
+
+      <!-- Drop Zone -->
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept="image/*" capture="environment">
+        <span class="drop-icon">🌙</span>
+        <div class="drop-text">Drop your image here or click to browse</div>
+        <div class="drop-sub">Or take a photo using your camera</div>
+        <div class="drop-formats">
+          <span class="format-tag">JPG</span>
+          <span class="format-tag">PNG</span>
+          <span class="format-tag">WEBP</span>
+          <span class="format-tag">BMP</span>
+        </div>
+      </div>
+
+      <!-- Preview Area -->
+      <div class="preview-area" id="previewArea">
+        <img class="preview-img" id="previewImg" src="" alt="Uploaded infant image">
+        <!-- Bounding Box Overlay -->
+        <div class="preview-overlay-box" id="overlayBox">
+          <div class="preview-overlay-label" id="overlayLabel">DETECTED</div>
+        </div>
+        <!-- Processing Overlay -->
+        <div class="processing-overlay" id="processingOverlay">
+          <div class="proc-orb"></div>
+          <div class="proc-text">Analyzing Image...</div>
+          <div class="proc-sub">Running YOLO inference</div>
+        </div>
+        <button class="preview-clear" id="clearBtn" title="Clear image">✕</button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-row">
+        <button class="btn-analyze" id="analyzeBtn" disabled>
+          <div class="btn-spinner"></div>
+          <span class="btn-label">🔍 Analyze Position</span>
+        </button>
+        <button class="btn-reset" id="resetBtn">↺</button>
+      </div>
+
+      <!-- Result Area -->
+      <div class="result-area" id="resultArea">
+        <div class="result-header">
+          <div class="result-icon" id="resultIcon">😴</div>
+          <div class="result-title-group">
+            <div class="result-label">Detected Position</div>
+            <div class="result-position" id="resultPosition">—</div>
+          </div>
+          <div class="result-badge" id="resultBadge">—</div>
+        </div>
+
+        <div class="confidence-bar-wrap" id="confWrap">
+          <div class="conf-label-row">
+            <span>Model Confidence</span>
+            <span id="confPct">—%</span>
+          </div>
+          <div class="conf-track">
+            <div class="conf-fill" id="confFill" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="result-alert" id="resultAlert">
+          <div class="alert-alert-icon" id="alertAlertIcon">ℹ️</div>
+          <div class="alert-content">
+            <div class="alert-content-title" id="alertAlertTitle">Status</div>
+            <div class="alert-content-sub" id="alertAlertSub">Analysis complete.</div>
+          </div>
+        </div>
+
+        <!-- All Predictions -->
+        <div class="all-predictions" id="allPredictions"></div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Position Guide -->
+      <div class="panel">
+        <div class="panel-title">Position Guide</div>
+        <div class="pos-guide">
+          <div class="pos-guide-item">
+            <div class="pos-guide-icon">🔄</div>
+            <div class="pos-guide-info">
+              <div class="pos-guide-name">Back (Supine)</div>
+              <div class="pos-guide-desc">Recommended sleep position. Face-up reduces SIDS risk significantly.</div>
+            </div>
+            <div class="pos-guide-badge pos-safe-badge">SAFE ✓</div>
+          </div>
+          <div class="pos-guide-item">
+            <div class="pos-guide-icon">⬇️</div>
+            <div class="pos-guide-info">
+              <div class="pos-guide-name">Prone (Stomach)</div>
+              <div class="pos-guide-desc">Face-down position increases SIDS risk. Requires immediate attention.</div>
+            </div>
+            <div class="pos-guide-badge pos-danger-badge">RISK ⚠️</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model Stats -->
+      <div class="panel">
+        <div class="panel-title">Model Performance</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-val">97%</div>
+            <div class="stat-lbl">Accuracy</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val">0.2s</div>
+            <div class="stat-lbl">Inference</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val">2</div>
+            <div class="stat-lbl">Classes</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val">YOLOv8</div>
+            <div class="stat-lbl">Architecture</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tips -->
+      <div class="panel">
+        <div class="panel-title">Safe Sleep Tips</div>
+        <div class="tip-list">
+          <div class="tip-item"><div class="tip-dot"></div>Always place baby on their back to sleep</div>
+          <div class="tip-item"><div class="tip-dot"></div>Use a firm, flat sleep surface</div>
+          <div class="tip-item"><div class="tip-dot"></div>Keep soft objects out of the sleep area</div>
+          <div class="tip-item"><div class="tip-dot"></div>Share a room but not the same bed</div>
+          <div class="tip-item"><div class="tip-dot"></div>Ensure a smoke-free environment</div>
+        </div>
+      </div>
+
+      <!-- Scan History -->
+      <div class="panel" id="historyPanel">
+        <div class="panel-title">Scan History</div>
+        <div class="history-list" id="historyList">
+          <div class="hist-empty">No scans yet.<br>Upload an image to start.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<footer>
+  <p>Made with ❤️ for every parent · <span>Matri Sathi</span> © 2025 · AI Sleep Position Monitor</p>
+</footer>
+
+<script>
+// ===== THEME TOGGLE =====
+const themeBtn = document.getElementById('themeBtn');
+const html = document.documentElement;
+const themeIcon = document.getElementById('themeIcon');
+let isDark = true;
+
+themeBtn.addEventListener('click', () => {
+  isDark = !isDark;
+  html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  themeIcon.textContent = isDark ? '🌙' : '☀️';
+});
+
+// ===== TOAST =====
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3200);
+}
+
+// ===== STATE =====
+let currentFile = null;
+let scanHistory = [];
+
+// ===== FILE INPUT =====
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const previewArea = document.getElementById('previewArea');
+const previewImg = document.getElementById('previewImg');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const clearBtn = document.getElementById('clearBtn');
+const resetBtn = document.getElementById('resetBtn');
+const resultArea = document.getElementById('resultArea');
+const processingOverlay = document.getElementById('processingOverlay');
+
+// Drag and drop
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropZone.classList.add('drag-over');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) handleFile(file);
+  else showToast('❌ Please drop an image file', 'error');
+});
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) handleFile(file);
+});
+
+function handleFile(file) {
+  currentFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    previewImg.src = e.target.result;
+    dropZone.style.display = 'none';
+    previewArea.classList.add('visible');
+    analyzeBtn.disabled = false;
+    resultArea.classList.remove('visible');
+    resetOverlayBox();
+    showToast('🖼️ Image loaded — ready to analyze!', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+clearBtn.addEventListener('click', resetAll);
+resetBtn.addEventListener('click', resetAll);
+
+function resetAll() {
+  currentFile = null;
+  fileInput.value = '';
+  previewImg.src = '';
+  previewArea.classList.remove('visible');
+  dropZone.style.display = 'block';
+  analyzeBtn.disabled = true;
+  resultArea.classList.remove('visible');
+  resetOverlayBox();
+}
+
+function resetOverlayBox() {
+  const box = document.getElementById('overlayBox');
+  box.style.display = 'none';
+  box.classList.remove('danger');
+  document.getElementById('overlayLabel').classList.remove('danger');
+}
+
+// ===== ANALYZE =====
+analyzeBtn.addEventListener('click', analyzeImage);
+
+async function analyzeImage() {
+  if (!currentFile) return;
+
+  // Show loading state
+  analyzeBtn.classList.add('loading');
+  processingOverlay.classList.add('active');
+  resultArea.classList.remove('visible');
+  resetOverlayBox();
+
+  const formData = new FormData();
+  formData.append('file', currentFile);
+
+  try {
+    const response = await fetch('/api/predict_sleep', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    displayResult(data.predictions);
+    addToHistory(currentFile, data.predictions);
+
+  } catch (err) {
+    console.error('Analysis failed:', err);
+    showToast(`❌ Analysis failed: ${err.message}`, 'error');
+    showErrorResult(err.message);
+  } finally {
+    analyzeBtn.classList.remove('loading');
+    processingOverlay.classList.remove('active');
+  }
+}
+
+function displayResult(predictions) {
+  resultArea.classList.add('visible');
+
+  const resultIcon = document.getElementById('resultIcon');
+  const resultPosition = document.getElementById('resultPosition');
+  const resultBadge = document.getElementById('resultBadge');
+  const confPct = document.getElementById('confPct');
+  const confFill = document.getElementById('confFill');
+  const resultAlert = document.getElementById('resultAlert');
+  const alertAlertIcon = document.getElementById('alertAlertIcon');
+  const alertAlertTitle = document.getElementById('alertAlertTitle');
+  const alertAlertSub = document.getElementById('alertAlertSub');
+  const allPredictions = document.getElementById('allPredictions');
+
+  if (!predictions || predictions.length === 0) {
+    // No detection
+    resultIcon.textContent = '🔍';
+    resultPosition.textContent = 'No Infant Detected';
+    resultPosition.className = 'result-position unknown';
+    resultBadge.textContent = 'UNDETECTED';
+    resultBadge.className = 'result-badge badge-unknown';
+    confPct.textContent = '0%';
+    confFill.style.width = '0%';
+    confFill.className = 'conf-fill';
+
+    resultAlert.className = 'result-alert alert-unknown';
+    alertAlertIcon.textContent = '🔍';
+    alertAlertTitle.textContent = 'No Detection';
+    alertAlertSub.textContent = 'No infant sleep position could be detected in this image. Try a clearer photo with better lighting and make sure the baby is visible.';
+
+    allPredictions.innerHTML = `
+      <div class="no-detection">
+        <div class="no-det-icon">😶</div>
+        <div class="no-det-title">No infant detected</div>
+        <div class="no-det-sub">Please use a clearer image with the infant in frame. Ensure good lighting and that the full body is visible.</div>
+      </div>`;
+    showToast('⚠️ No infant detected in the image', 'warn');
+    return;
+  }
+
+  // Sort by confidence descending
+  predictions.sort((a, b) => b.confidence - a.confidence);
+  const top = predictions[0];
+  const isSafe = top.position === 'Back';
+  const isDanger = top.position === 'Prone';
+  const confVal = Math.round(top.confidence * 100);
+
+  // Icon & position
+  resultIcon.textContent = isSafe ? '😴' : '🚨';
+  resultPosition.textContent = isSafe ? 'Back (Supine)' : 'Prone (Stomach)';
+  resultPosition.className = `result-position ${isSafe ? 'safe' : 'danger'}`;
+
+  // Badge
+  resultBadge.textContent = isSafe ? 'SAFE ✓' : 'DANGER ⚠️';
+  resultBadge.className = `result-badge ${isSafe ? 'badge-safe' : 'badge-danger'}`;
+
+  // Confidence
+  confPct.textContent = `${confVal}%`;
+  confFill.style.width = confVal + '%';
+  confFill.className = `conf-fill ${isDanger ? 'danger-fill' : ''}`;
+
+  // Alert
+  if (isSafe) {
+    resultAlert.className = 'result-alert alert-safe';
+    alertAlertIcon.textContent = '✅';
+    alertAlertTitle.textContent = 'Safe Sleep Position';
+    alertAlertSub.textContent = 'The infant is sleeping on their back (supine). This is the recommended position recommended by pediatric guidelines to reduce SIDS risk.';
+    showToast('✅ Safe position — Back detected!', 'success');
+  } else {
+    resultAlert.className = 'result-alert alert-danger';
+    alertAlertIcon.textContent = '🚨';
+    alertAlertTitle.textContent = 'DANGER — Prone Position Detected!';
+    alertAlertSub.textContent = 'The infant is sleeping on their stomach (prone). This increases the risk of Sudden Infant Death Syndrome (SIDS). Please reposition the baby immediately!';
+    showToast('🚨 DANGER: Prone position detected! Check the baby!', 'warn');
+  }
+
+  // Draw bounding box on preview
+  drawBoundingBox(top.box, top.position, confVal);
+
+  // All predictions list
+  if (predictions.length > 1) {
+    let html = `<div class="pred-title">All Detections (${predictions.length})</div><div class="pred-list">`;
+    predictions.forEach(pred => {
+      const s = pred.position === 'Back';
+      const pct = Math.round(pred.confidence * 100);
+      html += `
+        <div class="pred-item ${s ? 'pred-safe' : 'pred-danger'}">
+          <span style="font-size:20px">${s ? '😴' : '⚠️'}</span>
+          <span class="pred-pos">${pred.position === 'Back' ? 'Back (Supine)' : 'Prone (Stomach)'}</span>
+          <span class="pred-conf ${s ? 'safe-conf' : 'danger-conf'}">${pct}%</span>
+        </div>`;
+    });
+    html += '</div>';
+    allPredictions.innerHTML = html;
+  } else {
+    allPredictions.innerHTML = '';
+  }
+}
+
+function drawBoundingBox(box, position, confPct) {
+  if (!box || box.length < 4) return;
+  const img = previewImg;
+  const [x1, y1, x2, y2] = box;
+
+  // Wait for image to have natural dimensions
+  const draw = () => {
+    const displayW = img.clientWidth;
+    const displayH = img.clientHeight;
+    const naturalW = img.naturalWidth;
+    const naturalH = img.naturalHeight;
+
+    if (!naturalW || !naturalH || !displayW || !displayH) return;
+
+    // Calculate scale factor (object-fit: contain)
+    const scale = Math.min(displayW / naturalW, displayH / naturalH);
+    const renderedW = naturalW * scale;
+    const renderedH = naturalH * scale;
+    const offsetX = (displayW - renderedW) / 2;
+    const offsetY = (displayH - renderedH) / 2;
+
+    const left = offsetX + x1 * scale;
+    const top = offsetY + y1 * scale;
+    const width = (x2 - x1) * scale;
+    const height = (y2 - y1) * scale;
+
+    const overlayBox = document.getElementById('overlayBox');
+    const overlayLabel = document.getElementById('overlayLabel');
+
+    overlayBox.style.left = left + 'px';
+    overlayBox.style.top = top + 'px';
+    overlayBox.style.width = width + 'px';
+    overlayBox.style.height = height + 'px';
+    overlayBox.style.display = 'block';
+
+    const isSafe = position === 'Back';
+    overlayBox.classList.toggle('danger', !isSafe);
+    overlayLabel.classList.toggle('danger', !isSafe);
+    overlayLabel.textContent = `${position === 'Back' ? 'BACK — SAFE' : 'PRONE — DANGER'} | ${confPct}%`;
+  };
+
+  if (img.complete) draw();
+  else img.addEventListener('load', draw, { once: true });
+}
+
+function showErrorResult(msg) {
+  resultArea.classList.add('visible');
+  document.getElementById('resultIcon').textContent = '❌';
+  document.getElementById('resultPosition').textContent = 'Error';
+  document.getElementById('resultPosition').className = 'result-position unknown';
+  document.getElementById('resultBadge').textContent = 'FAILED';
+  document.getElementById('resultBadge').className = 'result-badge badge-unknown';
+  document.getElementById('resultAlert').className = 'result-alert alert-unknown';
+  document.getElementById('alertAlertIcon').textContent = '❌';
+  document.getElementById('alertAlertTitle').textContent = 'Analysis Failed';
+  document.getElementById('alertAlertSub').textContent = `Could not reach the backend. Make sure the MatriSathi server is running. Error: ${msg}`;
+  document.getElementById('confPct').textContent = '—';
+  document.getElementById('confFill').style.width = '0%';
+  document.getElementById('allPredictions').innerHTML = '';
+}
+
+// ===== HISTORY =====
+function addToHistory(file, predictions) {
+  const now = new Date();
+  const timeStr = now.toTimeString().slice(0, 8);
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    let status = 'no-det';
+    let position = 'No Detection';
+    if (predictions && predictions.length > 0) {
+      const top = predictions.sort((a, b) => b.confidence - a.confidence)[0];
+      status = top.position === 'Back' ? 'safe' : 'danger';
+      position = top.position === 'Back' ? 'Back (Supine)' : 'Prone (Stomach)';
+    }
+
+    const entry = { thumb: e.target.result, status, position, time: timeStr };
+    scanHistory.unshift(entry);
+    if (scanHistory.length > 10) scanHistory.pop();
+    renderHistory();
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (scanHistory.length === 0) {
+    list.innerHTML = '<div class="hist-empty">No scans yet.<br>Upload an image to start.</div>';
+    return;
+  }
+  list.innerHTML = scanHistory.map((h, i) => `
+    <div class="hist-item ${h.status}" onclick="jumpToScan(${i})">
+      <img class="hist-thumb" src="${h.thumb}" alt="Scan ${i+1}">
+      <div class="hist-info">
+        <div class="hist-pos">${h.position}</div>
+        <div class="hist-time">${h.time}</div>
+      </div>
+      <div class="hist-badge ${h.status}">${h.status === 'safe' ? 'SAFE' : h.status === 'danger' ? 'RISK' : 'N/A'}</div>
+    </div>`).join('');
+}
+
+function jumpToScan(idx) {
+  const entry = scanHistory[idx];
+  if (!entry) return;
+  // Show image preview from history
+  previewImg.src = entry.thumb;
+  dropZone.style.display = 'none';
+  previewArea.classList.add('visible');
+  showToast(`📂 Viewing scan from ${entry.time}`, 'success');
+}
+</script>
+</body>
+</html>

@@ -888,18 +888,18 @@ footer span { color: var(--accent); }
 
 <!-- Navbar -->
 <nav class="navbar">
-  <div class="logo">
-    <div class="logo-icon"><img src="logo.png" alt="Matri Sathi Logo"></div>
+  <a href="#home" class="logo" style="text-decoration:none;">
+    <div class="logo-icon"><img src="assets/logo.png" alt="Matri Sathi Logo"></div>
     <div>
       <div class="logo-text">Matri Sathi</div>
       <span class="logo-sub">Child Guardian</span>
     </div>
-  </div>
+  </a>
   <ul class="nav-links">
     <li><a href="#monitoring">Monitoring</a></li>
     <li><a href="#live">Live Feed</a></li>
     <li><a href="#features">Features</a></li>
-    <li><a href="about.html">About Us</a></li>
+    <li><a href="/about" id="navAboutLink">About Us</a></li>
   </ul>
   <div class="nav-right">
     <div class="status-pill">
@@ -1016,7 +1016,7 @@ footer span { color: var(--accent); }
       </div>
 
       <!-- Sleep Position -->
-      <div class="det-card" onclick="checkSleepPos()">
+      <div class="det-card" onclick="window.location.href='/sleep_position'" style="cursor:pointer;">
         <div class="det-visual" style="--vis-color: rgba(52,211,153,0.12)">
           <div class="det-visual-bg"></div>
           <div class="det-icon-big">😴</div>
@@ -1029,25 +1029,25 @@ footer span { color: var(--accent); }
         <div class="det-body">
           <div class="det-title">Sleep Position Monitor</div>
           <div class="det-desc">Computer vision model tracks safe sleeping positions. Alerts for prone/face-down positions which increase SIDS risk.</div>
-          <div class="sleep-visual">
-            <div class="sleep-pos active">
+          <div class="sleep-visual" id="sleepPosContainer">
+            <div class="sleep-pos active" id="posBack">
               <span class="sleep-pos-icon">🔄</span>Back (Safe)
             </div>
-            <div class="sleep-pos">
+            <div class="sleep-pos" id="posSide">
               <span class="sleep-pos-icon">↔️</span>Side
             </div>
-            <div class="sleep-pos">
-              <span class="sleep-pos-icon">⬇️</span>Prone ⚠
+            <div class="sleep-pos" id="posProne">
+              <span class="sleep-pos-icon">⬇️</span>Prone ⚠️
             </div>
           </div>
           <div class="det-metrics" style="margin-top:16px">
             <div class="det-metric">
-              <div class="det-metric-val" style="color:var(--accent3)">Safe</div>
+              <div class="det-metric-val" style="color:var(--accent3)" id="sleepCurrentStatus">Safe</div>
               <div class="det-metric-label">Current</div>
             </div>
             <div class="det-metric">
-              <div class="det-metric-val" style="color:var(--accent2)">97%</div>
-              <div class="det-metric-label">Accuracy</div>
+              <div class="det-metric-val" style="color:var(--accent2)" id="sleepAccuracy">97%</div>
+              <div class="det-metric-label">Confidence</div>
             </div>
           </div>
         </div>
@@ -1101,35 +1101,48 @@ footer span { color: var(--accent); }
         <p class="section-sub">AI overlay annotations with detection confidence scores, updated every 100ms.</p>
       </div>
 
-      <div class="alert-banner">
-        <div class="alert-icon">⚠️</div>
+      <div class="alert-banner" id="alertBanner" style="display: none;">
+        <div class="alert-icon" id="alertIcon">⚠️</div>
         <div class="alert-text">
-          <div class="alert-title">Inactivity Alert — Demo Mode</div>
-          <div class="alert-sub">No significant movement detected in the past 12 minutes. Please verify child status.</div>
+          <div class="alert-title" id="alertTitle">Inactivity Alert</div>
+          <div class="alert-sub" id="alertSub">No significant movement detected. Please verify child status.</div>
         </div>
         <button class="alert-dismiss" onclick="dismissAlert(this)">Dismiss</button>
       </div>
 
       <div class="live-grid">
-        <div class="feed-frame">
+        <div class="feed-frame" style="position: relative;">
+          <img id="videoFeed" src="/video_feed"
+            style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0;"
+            onload="onFeedLoad()"
+            onerror="onFeedError()">
           <div class="feed-overlay"></div>
           <div class="feed-static"></div>
-          <div class="feed-content">
+          <div class="feed-content" id="feedEmojiContainer" style="z-index: 1; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center;">
             <div class="feed-baby">🍼</div>
+            <div id="feedStatusMsg" style="font-size:13px; color:var(--text3); font-family:'JetBrains Mono',monospace;">Connecting to camera...</div>
           </div>
-          <!-- Detection boxes -->
-          <div class="feed-detection-box det-box1"></div>
-          <div class="feed-label fl1">INFANT · 98.4%</div>
+          <!-- Sleep Model Overlay Badge -->
+          <div id="sleepModelBadge" style="display:none; position:absolute; bottom:52px; left:16px; z-index:3;
+            background:rgba(0,0,0,0.75); backdrop-filter:blur(8px);
+            border:1px solid rgba(52,211,153,0.4); border-radius:10px; padding:8px 14px;
+            font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.6;">
+            <div style="color:var(--text3); font-size:9px; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px;">🧠 Infant Sleep Model</div>
+            <div id="sleepModelPos" style="color:var(--accent3); font-weight:700;">--</div>
+            <div id="sleepModelConf" style="color:var(--text2);">Confidence: --</div>
+          </div>
+          <!-- Detection box overlays -->
+          <div class="feed-detection-box det-box1" id="uiDetBox" style="display: none;"></div>
+          <div class="feed-label fl1" id="uiDetLabel" style="display: none;">INFANT</div>
           <!-- HUD -->
-          <div class="feed-hud-tl">
-            <div class="hud-item"><div class="hud-dot green"></div>Position: Back (Safe)</div>
-            <div class="hud-item"><div class="hud-dot green"></div>Activity: Detected</div>
-            <div class="hud-item"><div class="hud-dot" style="background:var(--warn); animation:pulse-dot 2s ease infinite"></div>Cry: Monitoring</div>
+          <div class="feed-hud-tl" style="z-index: 2;">
+            <div class="hud-item" id="hudPosition"><div class="hud-dot green" id="hudPositionDot"></div><span id="hudPositionText">Position: Connecting...</span></div>
+            <div class="hud-item" id="hudActivity"><div class="hud-dot green" id="hudActivityDot"></div><span id="hudActivityText">Activity: Connecting...</span></div>
           </div>
-          <div class="rec-badge"><div class="rec-dot"></div>REC</div>
-          <div class="feed-hud-br">
+          <div class="rec-badge" style="z-index: 2;"><div class="rec-dot"></div>LIVE · INFANT SLEEP AI</div>
+          <div class="feed-hud-br" style="z-index: 2;">
             <div style="color:var(--text3); font-size:10px">TIMESTAMP</div>
-            <div id="feedTime" style="color:var(--accent3)">--:--:--</div>
+            <div class="feedTime" style="color:var(--accent3)">--:--:--</div>
           </div>
         </div>
 
@@ -1147,49 +1160,62 @@ footer span { color: var(--accent); }
           <div class="panel">
             <div class="panel-title">Activity Log</div>
             <div class="activity-log" id="activityLog">
-              <div class="log-item ok"><span class="log-time">14:22</span><span class="log-msg">Child awake, movement detected</span></div>
-              <div class="log-item info"><span class="log-time">14:18</span><span class="log-msg">Sleep position changed to back</span></div>
-              <div class="log-item warn"><span class="log-time">14:05</span><span class="log-msg">Cry detected — Hunger (2.3s)</span></div>
-              <div class="log-item ok"><span class="log-time">13:50</span><span class="log-msg">Feeding completed, resting</span></div>
+              <div class="log-item info"><span class="log-time">--:--</span><span class="log-msg">Waiting for backend connection...</span></div>
             </div>
           </div>
 
           <div class="panel">
-            <div class="panel-title">Model Confidence</div>
+            <div class="panel-title">Model Confidence
+              <span id="modelDataBadge" style="margin-left:auto; font-size:9px; padding:2px 8px;
+                background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.3);
+                border-radius:20px; color:var(--accent3); text-transform:uppercase; letter-spacing:0.5px;">LIVE</span>
+            </div>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; text-align:center">
+              <!-- Cry: static label since cry model not yet active -->
               <div>
                 <div class="circ-progress">
                   <svg class="circ-svg" viewBox="0 0 36 36">
                     <circle class="circ-bg" cx="18" cy="18" r="15.9"/>
-                    <circle class="circ-fill" cx="18" cy="18" r="15.9" stroke="url(#grad1)" stroke-dasharray="99.2, 100"/>
+                    <circle class="circ-fill" cx="18" cy="18" r="15.9" stroke="url(#grad1)" stroke-dasharray="0, 100"/>
                     <defs><linearGradient id="grad1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#818cf8"/></linearGradient></defs>
                   </svg>
-                  <div class="circ-text" style="color:var(--accent)">99%</div>
+                  <div class="circ-text" id="cryCircText" style="color:var(--accent); font-size:11px;">--</div>
                 </div>
                 <div style="font-size:10px; color:var(--text3); letter-spacing:0.5px">CRY</div>
               </div>
+              <!-- Sleep: live from infant_sleep_position model -->
               <div>
                 <div class="circ-progress">
                   <svg class="circ-svg" viewBox="0 0 36 36">
                     <circle class="circ-bg" cx="18" cy="18" r="15.9"/>
-                    <circle class="circ-fill" cx="18" cy="18" r="15.9" stroke="url(#grad2)" stroke-dasharray="97, 100"/>
+                    <circle class="circ-fill" id="sleepCircFill" cx="18" cy="18" r="15.9" stroke="url(#grad2)" stroke-dasharray="0, 100"/>
                     <defs><linearGradient id="grad2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs>
                   </svg>
-                  <div class="circ-text" style="color:var(--accent3)">97%</div>
+                  <div class="circ-text" id="sleepCircText" style="color:var(--accent3); font-size:11px;">--</div>
                 </div>
                 <div style="font-size:10px; color:var(--text3); letter-spacing:0.5px">SLEEP</div>
               </div>
+              <!-- Activity: live motion score from yolov8 tracker -->
               <div>
                 <div class="circ-progress">
                   <svg class="circ-svg" viewBox="0 0 36 36">
                     <circle class="circ-bg" cx="18" cy="18" r="15.9"/>
-                    <circle class="circ-fill" cx="18" cy="18" r="15.9" stroke="url(#grad3)" stroke-dasharray="95, 100"/>
+                    <circle class="circ-fill" id="activityCircFill" cx="18" cy="18" r="15.9" stroke="url(#grad3)" stroke-dasharray="0, 100"/>
                     <defs><linearGradient id="grad3" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#fb923c"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs>
                   </svg>
-                  <div class="circ-text" style="color:var(--accent4)">95%</div>
+                  <div class="circ-text" id="activityCircText" style="color:var(--accent4); font-size:11px;">--</div>
                 </div>
-                <div style="font-size:10px; color:var(--text3); letter-spacing:0.5px">ACTIVITY</div>
+                <div style="font-size:10px; color:var(--text3); letter-spacing:0.5px">MOTION</div>
               </div>
+            </div>
+            <!-- Live model output details -->
+            <div id="modelDetailRow" style="margin-top:14px; padding:10px 12px;
+              background:var(--bg3); border-radius:8px;
+              font-family:'JetBrains Mono',monospace; font-size:10px; line-height:1.8;
+              color:var(--text3); display:none;">
+              <div>🛌 Sleep Model: <span id="modelSleepDetail" style="color:var(--text2);">Waiting for data...</span></div>
+              <div>🏃 Motion Score: <span id="modelMotionDetail" style="color:var(--text2);">--</span></div>
+              <div>⏱ Inactive: <span id="modelInactiveDetail" style="color:var(--text2);">--</span></div>
             </div>
           </div>
         </div>
@@ -1301,7 +1327,7 @@ window.addEventListener('scroll', () => {
 function updateTime() {
   const now = new Date();
   const t = now.toTimeString().slice(0,8);
-  document.getElementById('feedTime').textContent = t;
+  document.querySelectorAll('.feedTime').forEach(el => el.textContent = t);
 }
 setInterval(updateTime, 1000);
 updateTime();
@@ -1322,21 +1348,305 @@ function initWaveform(id, count) {
 initWaveform('waveform', 30);
 initWaveform('waveform2', 30);
 
-// ===== INACTIVITY TIMER =====
-let inactiveSeconds = 0;
-const maxSeconds = 30 * 60;
-setInterval(() => {
-  inactiveSeconds = (inactiveSeconds + 1) % (maxSeconds + 1);
-  const mins = String(Math.floor(inactiveSeconds / 60)).padStart(2, '0');
-  const secs = String(inactiveSeconds % 60).padStart(2, '0');
-  document.getElementById('inactiveTimer').textContent = mins + ':' + secs;
-  const pct = (inactiveSeconds / maxSeconds) * 100;
-  document.getElementById('timerBar').style.width = pct + '%';
-  if(inactiveSeconds === maxSeconds) {
-    showToast('⚠️ ALERT: 30 min inactivity!', 'warn');
-    inactiveSeconds = 0;
+// ===== VIDEO FEED HANDLERS =====
+function onFeedLoad() {
+  // Hide fallback emoji, show real camera stream
+  const container = document.getElementById('feedEmojiContainer');
+  if (container) container.style.display = 'none';
+  console.log('[MatriSathi] Live video feed loaded from backend.');
+}
+
+function onFeedError() {
+  // Show fallback with helpful message
+  const container = document.getElementById('feedEmojiContainer');
+  const statusMsg = document.getElementById('feedStatusMsg');
+  if (container) container.style.display = 'flex';
+  if (statusMsg) statusMsg.textContent = 'Backend offline — start app.py to activate live feed';
+  // Retry the feed every 5 seconds
+  const img = document.getElementById('videoFeed');
+  if (img) {
+    setTimeout(() => {
+      img.src = '/video_feed?' + Date.now();
+    }, 5000);
   }
-}, 1000);
+}
+
+// ===== BACKEND WEBSOCKET INTEGRATION =====
+const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+let socket;
+
+function connectWebSocket() {
+  socket = new WebSocket(wsUrl);
+
+  socket.onopen = () => {
+    console.log('Connected to MatriSathi WebSocket');
+    showToast('🔗 Backend Connected', 'success');
+  };
+
+  socket.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+
+      // Defensive null-safe helpers
+      const motion = data.motion || { status: 'UNKNOWN', score: 0, inactive_seconds: 0, box: null };
+      const sleep = data.sleep || { position: 'Unknown', confidence: 0, box: null };
+      const infantDetected = !!data.infant_detected;
+
+      // 1. Feed bounding box overlay (motion tracking)
+      const uiDetBox = document.getElementById('uiDetBox');
+      const uiDetLabel = document.getElementById('uiDetLabel');
+
+      if (infantDetected && motion.box) {
+        const [x1, y1, x2, y2] = motion.box;
+        const left   = (x1 / 640) * 100;
+        const top    = (y1 / 480) * 100;
+        const width  = ((x2 - x1) / 640) * 100;
+        const height = ((y2 - y1) / 480) * 100;
+
+        uiDetBox.style.display = 'block';
+        uiDetBox.style.left   = left + '%';
+        uiDetBox.style.top    = top + '%';
+        uiDetBox.style.width  = width + '%';
+        uiDetBox.style.height = height + '%';
+
+        uiDetLabel.style.display = 'block';
+        uiDetLabel.style.left = left + '%';
+        uiDetLabel.style.top  = (top - 6) + '%';
+        uiDetLabel.textContent = `BABY (${motion.status}) | Sleep: ${sleep.position}`;
+
+        if (sleep.position === 'Prone' || motion.status === 'INACTIVE') {
+          uiDetBox.style.borderColor  = 'var(--danger)';
+          uiDetBox.style.boxShadow    = '0 0 20px rgba(248,113,113,0.5)';
+          uiDetLabel.style.background  = 'rgba(248,113,113,0.25)';
+          uiDetLabel.style.borderColor = 'var(--danger)';
+          uiDetLabel.style.color       = 'var(--danger)';
+        } else if (motion.status === 'LOW MOVEMENT') {
+          uiDetBox.style.borderColor  = 'var(--warn)';
+          uiDetBox.style.boxShadow    = '0 0 20px rgba(251,191,36,0.4)';
+          uiDetLabel.style.background  = 'rgba(251,191,36,0.15)';
+          uiDetLabel.style.borderColor = 'var(--warn)';
+          uiDetLabel.style.color       = 'var(--warn)';
+        } else {
+          uiDetBox.style.borderColor  = 'var(--accent3)';
+          uiDetBox.style.boxShadow    = '0 0 20px rgba(52,211,153,0.3)';
+          uiDetLabel.style.background  = 'rgba(52,211,153,0.2)';
+          uiDetLabel.style.borderColor = 'var(--accent3)';
+          uiDetLabel.style.color       = 'var(--accent3)';
+        }
+      } else {
+        if (uiDetBox)   uiDetBox.style.display   = 'none';
+        if (uiDetLabel) uiDetLabel.style.display = 'none';
+      }
+
+      // 2. HUD state update
+      const hudPositionDot  = document.getElementById('hudPositionDot');
+      const hudActivityDot  = document.getElementById('hudActivityDot');
+      const hudPositionText = document.getElementById('hudPositionText');
+      const hudActivityText = document.getElementById('hudActivityText');
+
+      if (infantDetected) {
+        if (hudPositionText) {
+          hudPositionText.textContent = `Position: ${
+            sleep.position === 'Back'  ? 'Back (Safe)' :
+            sleep.position === 'Prone' ? 'Prone (Danger ⚠️)' : 'Unknown'
+          }`;
+        }
+        if (hudPositionDot) {
+          hudPositionDot.className = 'hud-dot ' + (sleep.position === 'Prone' ? 'red' : 'green');
+          hudPositionDot.style.background = sleep.position === 'Prone' ? 'var(--danger)' : 'var(--accent3)';
+        }
+        if (hudActivityText) hudActivityText.textContent = `Activity: ${motion.status}`;
+        if (hudActivityDot) {
+          hudActivityDot.className = 'hud-dot ' + (motion.status === 'INACTIVE' ? 'red' : 'green');
+          hudActivityDot.style.background = motion.status === 'INACTIVE' ? 'var(--danger)' : 'var(--accent3)';
+        }
+      } else {
+        if (hudPositionText) hudPositionText.textContent = 'Position: No Infant';
+        if (hudPositionDot)  hudPositionDot.style.background  = 'var(--text3)';
+        if (hudActivityText) hudActivityText.textContent = 'Activity: Unknown';
+        if (hudActivityDot)  hudActivityDot.style.background  = 'var(--text3)';
+      }
+
+      // 3. Sleep Position Monitor Card update
+      const posBack  = document.getElementById('posBack');
+      const posSide  = document.getElementById('posSide');
+      const posProne = document.getElementById('posProne');
+      if (posBack && posSide && posProne) {
+        posBack.classList.remove('active');
+        posSide.classList.remove('active');
+        posProne.classList.remove('active');
+
+        let sleepConf = 0;
+        if (infantDetected && sleep.position !== 'Unknown') {
+          if (sleep.position === 'Back') {
+            posBack.classList.add('active');
+            document.getElementById('sleepCurrentStatus').textContent = 'Safe';
+            document.getElementById('sleepCurrentStatus').style.color = 'var(--accent3)';
+          } else if (sleep.position === 'Prone') {
+            posProne.classList.add('active');
+            document.getElementById('sleepCurrentStatus').textContent = 'Danger ⚠️';
+            document.getElementById('sleepCurrentStatus').style.color = 'var(--danger)';
+          }
+          sleepConf = Math.round((sleep.confidence || 0) * 100);
+          document.getElementById('sleepAccuracy').textContent = sleepConf > 0 ? `${sleepConf}%` : '--';
+        } else {
+          document.getElementById('sleepCurrentStatus').textContent = '--';
+          document.getElementById('sleepAccuracy').textContent = '--';
+        }
+        // Note: sleepCircFill and sleepCircText are updated in the Model Confidence block below
+      }
+
+      // 4. Inactivity Timer and Bar update
+      const inactiveSec = motion.inactive_seconds || 0;
+      const secs = Math.floor(inactiveSec) % 60;
+      const mins = Math.floor(inactiveSec / 60) % 60;
+      const timerEl = document.getElementById('inactiveTimer');
+      if (timerEl) timerEl.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+
+      const pct = Math.min(100, (inactiveSec / 5.0) * 100);
+      const timerBar = document.getElementById('timerBar');
+      if (timerBar) timerBar.style.width = pct + '%';
+
+      const motionStatusEl = document.getElementById('motionStatus');
+      if (motionStatusEl) {
+        motionStatusEl.textContent = motion.status || 'UNKNOWN';
+        if (motion.status === 'INACTIVE')     motionStatusEl.style.color = 'var(--danger)';
+        else if (motion.status === 'LOW MOVEMENT') motionStatusEl.style.color = 'var(--warn)';
+        else                                  motionStatusEl.style.color = 'var(--accent3)';
+      }
+
+      // Activity confidence circle — motion score from backend (avg pixel diff 0-~15 scale)
+      // Clamp and normalize: score > 4.5 = active, scale to 0-100% meaningfully
+      const rawScore = motion.score || 0;
+      // Normalize: 0→0%, MOTION_THRESHOLD(4.5)→50%, 10+→100%
+      const activityIntensity = Math.min(100, Math.round((rawScore / 10.0) * 100));
+      const actCircFill = document.getElementById('activityCircFill');
+      const actCircText = document.getElementById('activityCircText');
+      if (actCircFill) actCircFill.setAttribute('stroke-dasharray', `${activityIntensity}, 100`);
+      if (actCircText) actCircText.textContent = infantDetected ? `${activityIntensity}%` : '--';
+      if (actCircText && !infantDetected) actCircText.style.fontSize = '11px';
+
+      // Sleep model confidence circle — real output from infant_sleep_position.pt
+      const sleepConf = infantDetected && sleep.position !== 'Unknown'
+        ? Math.round((sleep.confidence || 0) * 100)
+        : 0;
+      const sleepCircFill2 = document.getElementById('sleepCircFill');
+      const sleepCircText2 = document.getElementById('sleepCircText');
+      if (sleepCircFill2) sleepCircFill2.setAttribute('stroke-dasharray', `${sleepConf}, 100`);
+      if (sleepCircText2) sleepCircText2.textContent = (infantDetected && sleep.position !== 'Unknown') ? `${sleepConf}%` : '--';
+      if (sleepCircText2) sleepCircText2.style.fontSize = sleepConf > 0 ? '16px' : '11px';
+
+      // Cry circle: not yet active — show offline
+      const cryCircText = document.getElementById('cryCircText');
+      if (cryCircText) { cryCircText.textContent = 'OFF'; cryCircText.style.fontSize = '10px'; }
+
+      // Model detail row
+      const modelDetailRow = document.getElementById('modelDetailRow');
+      const modelSleepDetail = document.getElementById('modelSleepDetail');
+      const modelMotionDetail = document.getElementById('modelMotionDetail');
+      const modelInactiveDetail = document.getElementById('modelInactiveDetail');
+      if (modelDetailRow && infantDetected) {
+        modelDetailRow.style.display = 'block';
+        if (modelSleepDetail) {
+          modelSleepDetail.textContent = sleep.position !== 'Unknown'
+            ? `${sleep.position} (${Math.round((sleep.confidence || 0) * 100)}%)`
+            : 'No infant detected';
+          modelSleepDetail.style.color = sleep.position === 'Prone' ? 'var(--danger)' : 'var(--accent3)';
+        }
+        if (modelMotionDetail) {
+          modelMotionDetail.textContent = `${rawScore.toFixed(2)} avg px-diff (status: ${motion.status})`;
+          modelMotionDetail.style.color = motion.status === 'INACTIVE' ? 'var(--danger)' : motion.status === 'LOW MOVEMENT' ? 'var(--warn)' : 'var(--accent3)';
+        }
+        if (modelInactiveDetail) {
+          const inSec2 = motion.inactive_seconds || 0;
+          modelInactiveDetail.textContent = `${inSec2.toFixed(1)}s`;
+          modelInactiveDetail.style.color = inSec2 >= 5 ? 'var(--danger)' : inSec2 >= 2 ? 'var(--warn)' : 'var(--accent3)';
+        }
+      } else if (modelDetailRow) {
+        modelDetailRow.style.display = 'block';
+        if (modelSleepDetail) { modelSleepDetail.textContent = 'No infant in frame'; modelSleepDetail.style.color = 'var(--text3)'; }
+        if (modelMotionDetail) { modelMotionDetail.textContent = '--'; modelMotionDetail.style.color = 'var(--text3)'; }
+        if (modelInactiveDetail) { modelInactiveDetail.textContent = '--'; modelInactiveDetail.style.color = 'var(--text3)'; }
+      }
+
+      // Sleep model badge on video feed
+      const sleepModelBadge = document.getElementById('sleepModelBadge');
+      const sleepModelPos = document.getElementById('sleepModelPos');
+      const sleepModelConf = document.getElementById('sleepModelConf');
+      if (sleepModelBadge) {
+        if (infantDetected && sleep.position !== 'Unknown') {
+          sleepModelBadge.style.display = 'block';
+          if (sleepModelPos) {
+            sleepModelPos.textContent = sleep.position === 'Back' ? '✅ Back (Safe)' : '🚨 Prone (Danger)';
+            sleepModelPos.style.color = sleep.position === 'Prone' ? 'var(--danger)' : 'var(--accent3)';
+          }
+          if (sleepModelConf) {
+            sleepModelConf.textContent = `Confidence: ${Math.round((sleep.confidence || 0) * 100)}%`;
+          }
+        } else {
+          sleepModelBadge.style.display = 'none';
+        }
+      }
+
+      // 5. Alert Banner
+      const alertBanner = document.getElementById('alertBanner');
+      const alertTitle  = document.getElementById('alertTitle');
+      const alertSub    = document.getElementById('alertSub');
+      const alertIcon   = document.getElementById('alertIcon');
+      if (alertBanner) {
+        if (infantDetected && sleep.position === 'Prone') {
+          alertBanner.style.display     = 'flex';
+          alertBanner.style.background  = 'rgba(248,113,113,0.1)';
+          alertBanner.style.borderColor = 'rgba(248,113,113,0.4)';
+          if (alertTitle) { alertTitle.textContent = 'PRONE POSITION WARNING'; alertTitle.style.color = 'var(--danger)'; }
+          if (alertIcon)  alertIcon.textContent = '🚨';
+          if (alertSub)   alertSub.textContent   = 'Infant is sleeping on stomach (prone). This increases SIDS risk. Check the child immediately.';
+        } else if (motion.status === 'INACTIVE') {
+          alertBanner.style.display     = 'flex';
+          alertBanner.style.background  = 'rgba(251,146,60,0.1)';
+          alertBanner.style.borderColor = 'rgba(251,146,60,0.4)';
+          if (alertTitle) { alertTitle.textContent = 'Inactivity Alert'; alertTitle.style.color = 'var(--accent4)'; }
+          if (alertIcon)  alertIcon.textContent = '⚠️';
+          if (alertSub)   alertSub.textContent   = `No movement for ${Math.floor(inactiveSec)} seconds. Please verify child status.`;
+        } else {
+          alertBanner.style.display = 'none';
+        }
+      }
+
+      // 6. Activity Log update — render backend logs in sidebar
+      if (Array.isArray(data.logs) && data.logs.length > 0) {
+        const logContainer = document.getElementById('activityLog');
+        if (logContainer) {
+          logContainer.innerHTML = '';
+          // Show only the 5 most recent log entries
+          data.logs.slice(0, 5).forEach(log => {
+            const validType = ['ok', 'warn', 'info'].includes(log.type) ? log.type : 'info';
+            const item = document.createElement('div');
+            item.className = `log-item ${validType}`;
+            item.innerHTML = `<span class="log-time">${log.time || '--:--'}</span><span class="log-msg">${log.msg || ''}</span>`;
+            logContainer.appendChild(item);
+          });
+        }
+      }
+
+    } catch (err) {
+      console.error('WebSocket message error:', err, err.stack);
+    }
+  };
+
+  socket.onclose = () => {
+    console.log('WebSocket closed. Retrying in 3 seconds...');
+    setTimeout(connectWebSocket, 3000);
+  };
+
+  socket.onerror = (error) => {
+    console.error('WebSocket Error:', error);
+  };
+}
+
+// Start WebSocket connection
+connectWebSocket();
 
 // ===== TOAST =====
 function showToast(msg, type = 'success') {
@@ -1398,20 +1708,7 @@ if(window.innerWidth > 768) {
   });
 }
 
-// ===== AUTO LOG UPDATES =====
-const msgs = [
-  ['ok', 'Movement detected — normal activity'],
-  ['info', 'Sleep position verified: back'],
-  ['ok', 'Breathing pattern: normal'],
-  ['info', 'Room temperature: 24°C — optimal'],
-  ['warn', 'Brief cry detected — self-soothed'],
-];
-let msgIdx = 0;
-setInterval(() => {
-  const [type, msg] = msgs[msgIdx % msgs.length];
-  addLog(type, msg);
-  msgIdx++;
-}, 8000);
+// Real logs are managed dynamically via WebSocket connection.
 
 // ===== INITIAL TOAST =====
 setTimeout(() => showToast('🌸 Matri Sathi is monitoring', 'success'), 1200);

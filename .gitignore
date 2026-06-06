@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+*.spec
+
+# Virtual environments
+venv/
+env/
+.env
+.venv
+ENV/
+
+# ML model weights (large files)
+yolov8s.pt
+*.pth
+*.onnx
+*.pkl
+*.h5
+*.weights
+
+# Byte-compiled
+*.pyc
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# OS
+desktop.ini
+
+# Node (if any frontend tooling is added)
+node_modules/
+npm-debug.log*
+
+# Uvicorn / FastAPI auto-generated
+.uvicorn.log
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+.env.local
+.env.production

@@ -121,6 +121,8 @@ body::before {
 }
 .nav-links a:hover { color: var(--text); }
 .nav-links a:hover::after { transform: scaleX(1); }
+.nav-links a.active-link { color: var(--accent); }
+.nav-links a.active-link::after { transform: scaleX(1); }
 
 /* Theme btn */
 .theme-btn {
@@ -295,18 +297,18 @@ footer span { color: var(--accent); }
 <div class="ambient amb2"></div>
 
 <nav class="navbar">
-  <a href="Index.html" class="logo">
-    <div class="logo-icon"><img src="assets\logo.png" alt="Matri Sathi Logo"></div>
+  <a href="/" class="logo">
+    <div class="logo-icon"><img src="/assets/logo.png" alt="Matri Sathi Logo"></div>
     <div>
       <div class="logo-text">Matri Sathi</div>
       <span class="logo-sub">Child Guardian</span>
     </div>
   </a>
   <ul class="nav-links">
-    <li><a href="Index.html#monitoring">Monitoring</a></li>
-    <li><a href="Index.html#live">Live Feed</a></li>
-    <li><a href="Index.html#features">Features</a></li>
-    <li><a href="about.html">About Us</a></li>
+    <li><a href="/#monitoring">Monitoring</a></li>
+    <li><a href="/#live">Live Feed</a></li>
+    <li><a href="/#features">Features</a></li>
+    <li><a href="/about" class="active-link">About Us</a></li>
   </ul>
   <div class="nav-right">
     <button class="theme-btn" id="themeBtn">
