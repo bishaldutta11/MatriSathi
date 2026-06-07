@@ -466,7 +466,7 @@ All key thresholds are defined at the top of [`app.py`](app.py):
 
 ```python
 # Motion tracking thresholds
-INACTIVE_LIMIT   = 5.0   # seconds → triggers INACTIVE alert
+INACTIVE_LIMIT   = 6.0   # seconds → triggers INACTIVE alert
 LOW_LIMIT        = 2.0   # seconds → triggers LOW MOVEMENT warning
 MOTION_THRESHOLD = 4.5   # mean pixel-diff → minimum for "movement"
 
@@ -497,7 +497,7 @@ To tune sensitivity:
 | 👤 | **Ritam** | Systems & Architecture |
 | 👤 | **Subhodeep** | Privacy & Security |
 
-*Built with ❤️ for every parent. Presented at **IEDC Summit 2025**.*
+*Built with ❤️ for every parent . Presented at **IEDC Summit 2025!!**.*
 
 </div>
 
@@ -517,4 +517,25 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 *Guardian Eyes, Always Awake.*
 
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
