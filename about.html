@@ -231,10 +231,24 @@ main {
   box-shadow: 0 20px 40px rgba(0,0,0,0.2), 0 0 30px var(--glow);
 }
 .value-icon {
-  width: 64px; height: 64px; margin: 0 auto 20px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border-radius: 16px; display: flex; align-items: center; justify-content: center;
-  font-size: 28px; color: white;
+  width: 72px; height: 72px; margin: 0 auto 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border);
+  box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+[data-theme="light"] .value-icon {
+  background: rgba(0, 0, 0, 0.02);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.02);
+}
+.val-svg {
+  width: 36px; height: 36px;
+  transition: all 0.4s ease;
+}
+.value-card:hover .val-svg {
+  transform: scale(1.1);
 }
 .value-title { font-size: 20px; font-weight: 600; margin-bottom: 12px; }
 .value-desc { color: var(--text2); line-height: 1.7; font-size: 15px; }
@@ -349,22 +363,58 @@ footer span { color: var(--accent); }
   </div>
 
   <div class="values-section">
+    <!-- SVG Defs for Core Values Gradients -->
+    <svg style="width:0; height:0; position:absolute;" aria-hidden="true">
+      <defs>
+        <linearGradient id="val-privacy-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#818cf8" />
+          <stop offset="100%" stop-color="#c084fc" />
+        </linearGradient>
+        <linearGradient id="val-speed-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f59e0b" />
+          <stop offset="100%" stop-color="#ef4444" />
+        </linearGradient>
+        <linearGradient id="val-empathy-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ec4899" />
+          <stop offset="100%" stop-color="#f43f5e" />
+        </linearGradient>
+      </defs>
+    </svg>
     <div class="values-header">
       <h2>Our Core Values</h2>
     </div>
     <div class="values-grid">
       <div class="value-card">
-        <div class="value-icon">🔒</div>
+        <div class="value-icon">
+          <svg viewBox="0 0 24 24" class="val-svg" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12a10 10 0 0 1 18.5-5" stroke="url(#val-privacy-grad)"></path>
+            <path d="M5 12a7 7 0 0 1 12.5-3" stroke="var(--text)"></path>
+            <path d="M8 12a4 4 0 0 1 6.5-1.5" stroke="url(#val-privacy-grad)"></path>
+            <circle cx="12" cy="12" r="1" fill="var(--text)"></circle>
+          </svg>
+        </div>
         <div class="value-title">Absolute Privacy</div>
         <div class="value-desc">Your child's data is sacred. All our AI models process video and audio feeds locally on-device using end-to-end encryption. No feeds are ever stored on our servers.</div>
       </div>
       <div class="value-card">
-        <div class="value-icon">⚡</div>
+        <div class="value-icon">
+          <svg viewBox="0 0 24 24" class="val-svg" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10" stroke="url(#val-speed-grad)" stroke-dasharray="3 2"></path>
+            <path d="M12 12L16 8" stroke="var(--text)" stroke-width="2.5"></path>
+            <circle cx="12" cy="12" r="2" fill="var(--text)"></circle>
+          </svg>
+        </div>
         <div class="value-title">Zero Latency</div>
         <div class="value-desc">In critical moments, every millisecond counts. Our infrastructure is optimized for real-time inference, delivering alerts to your devices instantly.</div>
       </div>
       <div class="value-card">
-        <div class="value-icon">💖</div>
+        <div class="value-icon">
+          <svg viewBox="0 0 24 24" class="val-svg" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="url(#val-empathy-grad)" stroke-width="1.5"></path>
+            <circle cx="10" cy="9" r="2" stroke="var(--text)"></circle>
+            <circle cx="14" cy="9" r="2" stroke="var(--text)"></circle>
+          </svg>
+        </div>
         <div class="value-title">Empathy in Design</div>
         <div class="value-desc">We build technology that cares. Our interfaces are designed to be calming, intuitive, and accessible, reducing anxiety rather than adding to it.</div>
       </div>
