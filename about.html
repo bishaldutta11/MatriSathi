@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
+<script>
+  // Immediately set theme to prevent flickering
+  (function() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  })();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>About Us — Matri Sathi</title>
@@ -335,7 +342,9 @@ footer span { color: var(--accent); }
       <p>Our goal isn't to replace parents, but to give them a reliable, untiring partner that never blinks.</p>
     </div>
     <div class="story-visual">
-      <div class="visual-icon">🛡️</div>
+      <div class="visual-icon">
+        <img src="assets/infant3.png" alt="Sleeping infant illustration" style="width: 220px; height: 220px; object-fit: contain; filter: drop-shadow(0 0 30px rgba(192, 132, 252, 0.35));">
+      </div>
     </div>
   </div>
 
@@ -429,12 +438,20 @@ footer span { color: var(--accent); }
 const themeBtn = document.getElementById('themeBtn');
 const html = document.documentElement;
 const themeIcon = document.getElementById('themeIcon');
-let isDark = true;
+let isDark = html.getAttribute('data-theme') === 'dark';
+
+if (themeIcon) {
+  themeIcon.textContent = isDark ? '🌙' : '☀️';
+}
 
 themeBtn.addEventListener('click', () => {
   isDark = !isDark;
-  html.setAttribute('data-theme', isDark ? 'dark' : 'light');
-  themeIcon.textContent = isDark ? '🌙' : '☀️';
+  const newTheme = isDark ? 'dark' : 'light';
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  if (themeIcon) {
+    themeIcon.textContent = isDark ? '🌙' : '☀️';
+  }
 });
 </script>
 </body>
