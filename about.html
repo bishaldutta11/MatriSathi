@@ -1,508 +1,888 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="dark">
-<head>
-<script>
-  // Immediately set theme to prevent flickering
-  (function() {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  })();
-</script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>About Us — Matri Sathi</title>
-<link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="apple-touch-icon" href="assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<style>
-/* ===== CSS VARIABLES (Same as Index) ===== */
-:root {
-  --bg: #0a0a0f;
-  --bg2: #0f0f1a;
-  --bg3: #141426;
-  --surface: rgba(255,255,255,0.04);
-  --surface2: rgba(255,255,255,0.08);
-  --border: rgba(255,255,255,0.08);
-  --text: #f0eeff;
-  --text2: #9890b8;
-  --text3: #5a5278;
-  --accent: #c084fc;
-  --accent2: #818cf8;
-  --accent3: #34d399;
-  --accent4: #fb923c;
-  --accent5: #f472b6;
-  --glow: rgba(192,132,252,0.3);
-  --glow2: rgba(129,140,248,0.2);
-  --nav-h: 70px;
-  --mobile-nav: 80px;
-  transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
-}
-[data-theme="light"] {
-  --bg: #faf8ff;
-  --bg2: #f2eeff;
-  --bg3: #ebe4ff;
-  --surface: rgba(0,0,0,0.04);
-  --surface2: rgba(0,0,0,0.07);
-  --border: rgba(0,0,0,0.1);
-  --text: #1a1230;
-  --text2: #5a4a7a;
-  --text3: #9880c0;
-  --accent: #7c3aed;
-  --accent2: #4f46e5;
-  --accent3: #059669;
-  --accent4: #ea580c;
-  --accent5: #db2777;
-  --glow: rgba(124,58,237,0.2);
-  --glow2: rgba(79,70,229,0.15);
-}
+  <head>
+    <script>
+      // Immediately set theme to prevent flickering
+      (function () {
+        const savedTheme = localStorage.getItem("theme") || "dark";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About Us — Matri Sathi</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png" />
+    <link rel="apple-touch-icon" href="assets/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ===== CSS VARIABLES (Same as Index) ===== */
+      :root {
+        --bg: #0a0a0f;
+        --bg2: #0f0f1a;
+        --bg3: #141426;
+        --surface: rgba(255, 255, 255, 0.04);
+        --surface2: rgba(255, 255, 255, 0.08);
+        --border: rgba(255, 255, 255, 0.08);
+        --text: #f0eeff;
+        --text2: #9890b8;
+        --text3: #5a5278;
+        --accent: #c084fc;
+        --accent2: #818cf8;
+        --accent3: #34d399;
+        --accent4: #fb923c;
+        --accent5: #f472b6;
+        --glow: rgba(192, 132, 252, 0.3);
+        --glow2: rgba(129, 140, 248, 0.2);
+        --nav-h: 70px;
+        --mobile-nav: 80px;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      [data-theme="light"] {
+        --bg: #faf8ff;
+        --bg2: #f2eeff;
+        --bg3: #ebe4ff;
+        --surface: rgba(0, 0, 0, 0.04);
+        --surface2: rgba(0, 0, 0, 0.07);
+        --border: rgba(0, 0, 0, 0.1);
+        --text: #1a1230;
+        --text2: #5a4a7a;
+        --text3: #9880c0;
+        --accent: #7c3aed;
+        --accent2: #4f46e5;
+        --accent3: #059669;
+        --accent4: #ea580c;
+        --accent5: #db2777;
+        --glow: rgba(124, 58, 237, 0.2);
+        --glow2: rgba(79, 70, 229, 0.15);
+      }
 
-/* ===== RESET & GLOBAL ===== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  overflow-x: hidden;
-  min-height: 100vh;
-}
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.4;
-}
+      /* ===== RESET & GLOBAL ===== */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 0;
+        opacity: 0.4;
+      }
 
-/* ===== AMBIENT BLOBS ===== */
-.ambient {
-  position: fixed; pointer-events: none; border-radius: 50%; filter: blur(80px); z-index: 0;
-  transition: all 1s ease;
-}
-.amb1 { width: 600px; height: 600px; top: -200px; left: -100px; background: radial-gradient(circle, rgba(192,132,252,0.12) 0%, transparent 70%); animation: floatAmb 12s ease-in-out infinite; }
-.amb2 { width: 500px; height: 500px; bottom: 10%; right: -150px; background: radial-gradient(circle, rgba(129,140,248,0.1) 0%, transparent 70%); animation: floatAmb 15s ease-in-out infinite reverse; }
+      /* ===== AMBIENT BLOBS ===== */
+      .ambient {
+        position: fixed;
+        pointer-events: none;
+        border-radius: 50%;
+        filter: blur(80px);
+        z-index: 0;
+        transition: all 1s ease;
+      }
+      .amb1 {
+        width: 600px;
+        height: 600px;
+        top: -200px;
+        left: -100px;
+        background: radial-gradient(
+          circle,
+          rgba(192, 132, 252, 0.12) 0%,
+          transparent 70%
+        );
+        animation: floatAmb 12s ease-in-out infinite;
+      }
+      .amb2 {
+        width: 500px;
+        height: 500px;
+        bottom: 10%;
+        right: -150px;
+        background: radial-gradient(
+          circle,
+          rgba(129, 140, 248, 0.1) 0%,
+          transparent 70%
+        );
+        animation: floatAmb 15s ease-in-out infinite reverse;
+      }
 
-/* ===== NAVBAR ===== */
-.navbar {
-  position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 40px;
-  background: rgba(10,10,15,0.7);
-  backdrop-filter: blur(24px);
-  border-bottom: 1px solid var(--border);
-  z-index: 1000;
-  transition: all 0.4s ease;
-}
-[data-theme="light"] .navbar { background: rgba(250,248,255,0.8); }
+      /* ===== NAVBAR ===== */
+      .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--nav-h);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        background: rgba(10, 10, 15, 0.7);
+        backdrop-filter: blur(24px);
+        border-bottom: 1px solid var(--border);
+        z-index: 1000;
+        transition: all 0.4s ease;
+      }
+      [data-theme="light"] .navbar {
+        background: rgba(250, 248, 255, 0.8);
+      }
 
-.logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-.logo-icon {
-  width: 40px; height: 40px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 20px var(--glow);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  overflow: hidden;
-}
-.logo-icon img { width: 100%; height: 100%; object-fit: cover; filter: invert(1); transition: filter 0.4s ease; }
-[data-theme="light"] .logo-icon img { filter: none; }
-.logo:hover .logo-icon { transform: rotate(10deg) scale(1.1); box-shadow: 0 0 35px var(--glow); }
-.logo-text {
-  font-family: 'Playfair Display', serif;
-  font-size: 22px; font-weight: 700;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.logo-sub {
-  font-size: 10px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase;
-  display: block; margin-top: -4px; font-family: 'JetBrains Mono', monospace;
-}
-.nav-links { display: flex; gap: 32px; list-style: none; }
-.nav-links a {
-  text-decoration: none; color: var(--text2); font-size: 14px; font-weight: 500;
-  letter-spacing: 0.5px; position: relative; padding: 4px 0; transition: color 0.3s ease;
-}
-.nav-links a::after {
-  content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
-  transform: scaleX(0); transition: transform 0.3s ease;
-}
-.nav-links a:hover { color: var(--text); }
-.nav-links a:hover::after { transform: scaleX(1); }
-.nav-links a.active-link { color: var(--accent); }
-.nav-links a.active-link::after { transform: scaleX(1); }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+      }
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 20px var(--glow);
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease;
+        overflow: hidden;
+      }
+      .logo-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: invert(1);
+        transition: filter 0.4s ease;
+      }
+      [data-theme="light"] .logo-icon img {
+        filter: none;
+      }
+      .logo:hover .logo-icon {
+        transform: rotate(10deg) scale(1.1);
+        box-shadow: 0 0 35px var(--glow);
+      }
+      .logo-text {
+        font-family: "Playfair Display", serif;
+        font-size: 22px;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .logo-sub {
+        font-size: 10px;
+        color: var(--text3);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        display: block;
+        margin-top: -4px;
+        font-family: "JetBrains Mono", monospace;
+      }
+      .nav-links {
+        display: flex;
+        gap: 32px;
+        list-style: none;
+      }
+      .nav-links a {
+        text-decoration: none;
+        color: var(--text2);
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        position: relative;
+        padding: 4px 0;
+        transition: color 0.3s ease;
+      }
+      .nav-links a::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+      }
+      .nav-links a:hover {
+        color: var(--text);
+      }
+      .nav-links a:hover::after {
+        transform: scaleX(1);
+      }
+      .nav-links a.active-link {
+        color: var(--accent);
+      }
+      .nav-links a.active-link::after {
+        transform: scaleX(1);
+      }
 
-/* Theme btn */
-.theme-btn {
-  position: relative; width: 64px; height: 34px;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 17px; cursor: pointer; overflow: hidden;
-}
-.theme-track { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 4px; }
-.theme-thumb {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  display: flex; align-items: center; justify-content: center; font-size: 14px;
-  transform: translateX(0); transition: transform 0.4s ease;
-}
-[data-theme="light"] .theme-thumb { transform: translateX(30px); background: linear-gradient(135deg, #f59e0b, #ef4444); }
+      /* Theme btn */
+      .theme-btn {
+        position: relative;
+        width: 64px;
+        height: 34px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 17px;
+        cursor: pointer;
+        overflow: hidden;
+      }
+      .theme-track {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        padding: 0 4px;
+      }
+      .theme-thumb {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        transform: translateX(0);
+        transition: transform 0.4s ease;
+      }
+      [data-theme="light"] .theme-thumb {
+        transform: translateX(30px);
+        background: linear-gradient(135deg, #f59e0b, #ef4444);
+      }
 
-/* ===== MAIN CONTENT (ABOUT) ===== */
-main {
-  padding-top: calc(var(--nav-h) + 80px);
-  padding-bottom: 80px;
-  position: relative; z-index: 1;
-  max-width: 1200px; margin: 0 auto;
-}
+      /* ===== MAIN CONTENT (ABOUT) ===== */
+      main {
+        padding-top: calc(var(--nav-h) + 80px);
+        padding-bottom: 80px;
+        position: relative;
+        z-index: 1;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
 
-.about-hero {
-  text-align: center;
-  margin-bottom: 100px;
-  padding: 0 20px;
-}
-.badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 16px; background: rgba(192,132,252,0.1);
-  border: 1px solid rgba(192,132,252,0.25); border-radius: 20px;
-  font-size: 12px; color: var(--accent); font-family: 'JetBrains Mono', monospace;
-  margin-bottom: 24px;
-}
-.about-hero h1 {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(40px, 6vw, 70px); line-height: 1.1; font-weight: 900;
-  margin-bottom: 24px;
-}
-.about-hero h1 span {
-  background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent5));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.about-hero p {
-  font-size: 18px; color: var(--text2); line-height: 1.8;
-  max-width: 600px; margin: 0 auto;
-}
+      .about-hero {
+        text-align: center;
+        margin-bottom: 100px;
+        padding: 0 20px;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 16px;
+        background: rgba(192, 132, 252, 0.1);
+        border: 1px solid rgba(192, 132, 252, 0.25);
+        border-radius: 20px;
+        font-size: 12px;
+        color: var(--accent);
+        font-family: "JetBrains Mono", monospace;
+        margin-bottom: 24px;
+      }
+      .about-hero h1 {
+        font-family: "Playfair Display", serif;
+        font-size: clamp(40px, 6vw, 70px);
+        line-height: 1.1;
+        font-weight: 900;
+        margin-bottom: 24px;
+      }
+      .about-hero h1 span {
+        background: linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent2),
+          var(--accent5)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .about-hero p {
+        font-size: 18px;
+        color: var(--text2);
+        line-height: 1.8;
+        max-width: 600px;
+        margin: 0 auto;
+      }
 
-.story-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 60px;
-  align-items: center; padding: 0 40px; margin-bottom: 120px;
-}
-.story-text h2 {
-  font-family: 'Playfair Display', serif; font-size: 36px; margin-bottom: 20px;
-}
-.story-text p {
-  color: var(--text2); line-height: 1.8; margin-bottom: 20px; font-size: 16px;
-}
-.story-visual {
-  position: relative;
-  aspect-ratio: 4/3;
-  border-radius: 24px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-}
-.story-visual::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(circle at center, rgba(129,140,248,0.1), transparent 70%);
-}
-.visual-icon { font-size: 80px; animation: float 6s ease-in-out infinite; }
-@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+      .story-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 60px;
+        align-items: center;
+        padding: 0 40px;
+        margin-bottom: 120px;
+      }
+      .story-text h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 36px;
+        margin-bottom: 20px;
+      }
+      .story-text p {
+        color: var(--text2);
+        line-height: 1.8;
+        margin-bottom: 20px;
+        font-size: 16px;
+      }
+      .story-visual {
+        position: relative;
+        aspect-ratio: 4/3;
+        border-radius: 24px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .story-visual::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at center,
+          rgba(129, 140, 248, 0.1),
+          transparent 70%
+        );
+      }
+      .visual-icon {
+        font-size: 80px;
+        animation: float 6s ease-in-out infinite;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
 
-.values-section {
-  padding: 0 40px;
-}
-.values-header { text-align: center; margin-bottom: 60px; }
-.values-header h2 { font-family: 'Playfair Display', serif; font-size: 36px; }
+      .values-section {
+        padding: 0 40px;
+      }
+      .values-header {
+        text-align: center;
+        margin-bottom: 60px;
+      }
+      .values-header h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 36px;
+      }
 
-.values-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;
-}
-.value-card {
-  padding: 40px 30px;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 20px; text-align: center;
-  transition: transform 0.3s ease, border-color 0.3s ease;
-}
-.value-card:hover {
-  transform: translateY(-10px);
-  border-color: var(--accent);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.2), 0 0 30px var(--glow);
-}
-.value-icon {
-  width: 72px; height: 72px; margin: 0 auto 24px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--border);
-  box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.05);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-[data-theme="light"] .value-icon {
-  background: rgba(0, 0, 0, 0.02);
-  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.02);
-}
-.val-svg {
-  width: 36px; height: 36px;
-  transition: all 0.4s ease;
-}
-.value-card:hover .val-svg {
-  transform: scale(1.1);
-}
-.value-title { font-size: 20px; font-weight: 600; margin-bottom: 12px; }
-.value-desc { color: var(--text2); line-height: 1.7; font-size: 15px; }
+      .values-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+      }
+      .value-card {
+        padding: 40px 30px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        text-align: center;
+        transition:
+          transform 0.3s ease,
+          border-color 0.3s ease;
+      }
+      .value-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--accent);
+        box-shadow:
+          0 20px 40px rgba(0, 0, 0, 0.2),
+          0 0 30px var(--glow);
+      }
+      .value-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 24px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+        box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.05);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+      }
+      [data-theme="light"] .value-icon {
+        background: rgba(0, 0, 0, 0.02);
+        box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.02);
+      }
+      .val-svg {
+        width: 36px;
+        height: 36px;
+        transition: all 0.4s ease;
+      }
+      .value-card:hover .val-svg {
+        transform: scale(1.1);
+      }
+      .value-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 12px;
+      }
+      .value-desc {
+        color: var(--text2);
+        line-height: 1.7;
+        font-size: 15px;
+      }
 
-/* ===== TEAM SECTION ===== */
-.team-section {
-  padding: 80px 40px 0;
-}
-.team-header { text-align: center; margin-bottom: 50px; }
-.team-header h2 { font-family: 'Playfair Display', serif; font-size: 36px; }
-.team-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
-}
-.team-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 20px; padding: 24px; text-align: center;
-  transition: transform 0.3s ease, border-color 0.3s ease;
-}
-.team-card:hover {
-  transform: translateY(-8px);
-  border-color: var(--accent2);
-  box-shadow: 0 16px 32px rgba(0,0,0,0.2), 0 0 20px var(--glow2);
-}
-.team-photo-placeholder {
-  width: 120px; height: 120px; margin: 0 auto 20px;
-  background: var(--bg3); border-radius: 50%;
-  border: 2px dashed var(--text3);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text3); font-size: 12px; font-family: 'JetBrains Mono', monospace;
-  overflow: hidden; position: relative;
-}
-.team-photo {
-  width: 120px; height: 120px; margin: 0 auto 20px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
-  overflow: hidden; position: relative;
-  background: var(--bg3);
-}
-.team-photo img {
-  width: 100%; height: 100%; object-fit: cover;
-}
-.team-name { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
-.team-role { font-size: 13px; color: var(--accent); margin-bottom: 12px; font-family: 'JetBrains Mono', monospace; }
-.team-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+      /* ===== TEAM SECTION ===== */
+      .team-section {
+        padding: 80px 40px 0;
+      }
+      .team-header {
+        text-align: center;
+        margin-bottom: 50px;
+      }
+      .team-header h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 36px;
+      }
+      .team-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+      }
+      .team-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        text-align: center;
+        transition:
+          transform 0.3s ease,
+          border-color 0.3s ease;
+      }
+      .team-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--accent2);
+        box-shadow:
+          0 16px 32px rgba(0, 0, 0, 0.2),
+          0 0 20px var(--glow2);
+      }
+      .team-photo-placeholder {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 20px;
+        background: var(--bg3);
+        border-radius: 50%;
+        border: 2px dashed var(--text3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text3);
+        font-size: 12px;
+        font-family: "JetBrains Mono", monospace;
+        overflow: hidden;
+        position: relative;
+      }
+      .team-photo {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        border: 2px solid var(--border);
+        overflow: hidden;
+        position: relative;
+        background: var(--bg3);
+      }
+      .team-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .team-name {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--text);
+      }
+      .team-role {
+        font-size: 13px;
+        color: var(--accent);
+        margin-bottom: 12px;
+        font-family: "JetBrains Mono", monospace;
+      }
+      .team-desc {
+        font-size: 13px;
+        color: var(--text2);
+        line-height: 1.6;
+      }
 
-/* ===== FOOTER ===== */
-footer {
-  border-top: 1px solid var(--border); padding: 40px;
-  text-align: center; color: var(--text3); font-size: 13px;
-  position: relative; z-index: 1;
-}
-footer span { color: var(--accent); }
+      /* ===== FOOTER ===== */
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 40px;
+        text-align: center;
+        color: var(--text3);
+        font-size: 13px;
+        position: relative;
+        z-index: 1;
+      }
+      footer span {
+        color: var(--accent);
+      }
 
-@media (max-width: 992px) {
-  .team-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 768px) {
-  .story-grid { grid-template-columns: 1fr; padding: 0 20px; }
-  .values-section, .team-section { padding: 0 20px; }
-  .team-section { padding-top: 60px; }
-  .values-grid, .team-grid { grid-template-columns: 1fr; }
-  .navbar { padding: 0 20px; }
-  .nav-links { display: none; }
-}
-</style>
-</head>
-<body>
+      @media (max-width: 992px) {
+        .team-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 768px) {
+        .story-grid {
+          grid-template-columns: 1fr;
+          padding: 0 20px;
+        }
+        .values-section,
+        .team-section {
+          padding: 0 20px;
+        }
+        .team-section {
+          padding-top: 60px;
+        }
+        .values-grid,
+        .team-grid {
+          grid-template-columns: 1fr;
+        }
+        .navbar {
+          padding: 0 20px;
+        }
+        .nav-links {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ambient amb1"></div>
+    <div class="ambient amb2"></div>
 
-<div class="ambient amb1"></div>
-<div class="ambient amb2"></div>
-
-<nav class="navbar">
-  <a href="Index.html" class="logo">
-    <div class="logo-icon"><img src="assets/logo.png" alt="Matri Sathi Logo"></div>
-    <div>
-      <div class="logo-text">Matri Sathi</div>
-      <span class="logo-sub">Child Guardian</span>
-    </div>
-  </a>
-  <ul class="nav-links">
-    <li><a href="Index.html">Home</a></li>
-    <li><a href="about.html" class="active-link">About Us</a></li>
-  </ul>
-  <div class="nav-right">
-    <button class="theme-btn" id="themeBtn">
-      <div class="theme-track">
-        <div class="theme-thumb" id="themeThumb"><span id="themeIcon">🌙</span></div>
-      </div>
-    </button>
-  </div>
-</nav>
-
-<main>
-  <div class="about-hero">
-    <div class="badge">✦ Our Mission</div>
-    <h1>Protecting what <br><span>matters most.</span></h1>
-    <p>Matri Sathi is dedicated to bringing cutting-edge artificial intelligence to the most critical job in the world: parenthood. We build intelligent tools that offer unparalleled peace of mind.</p>
-  </div>
-
-  <div class="story-grid">
-    <div class="story-text">
-      <h2>The Genesis of Matri Sathi</h2>
-      <p>Parenthood is a beautiful journey, but it is often accompanied by sleepless nights and constant worry. We realized that traditional baby monitors were passive—they only showed you what was happening, relying entirely on the parent's vigilance.</p>
-      <p>We built Matri Sathi to be an active guardian. By utilizing state-of-the-art computer vision and audio classification models, Matri Sathi doesn't just watch; it understands. It can differentiate between a cry of hunger and a cry of pain. It knows when a sleeping position becomes unsafe.</p>
-      <p>Our goal isn't to replace parents, but to give them a reliable, untiring partner that never blinks.</p>
-    </div>
-    <div class="story-visual">
-      <div class="visual-icon">
-        <img src="assets/infant3.png" alt="Sleeping infant illustration" style="width: 220px; height: 220px; object-fit: contain; filter: drop-shadow(0 0 30px rgba(192, 132, 252, 0.35));">
-      </div>
-    </div>
-  </div>
-
-  <div class="values-section">
-    <!-- SVG Defs for Core Values Gradients -->
-    <svg style="width:0; height:0; position:absolute;" aria-hidden="true">
-      <defs>
-        <linearGradient id="val-privacy-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#818cf8" />
-          <stop offset="100%" stop-color="#c084fc" />
-        </linearGradient>
-        <linearGradient id="val-speed-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#f59e0b" />
-          <stop offset="100%" stop-color="#ef4444" />
-        </linearGradient>
-        <linearGradient id="val-empathy-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#ec4899" />
-          <stop offset="100%" stop-color="#f43f5e" />
-        </linearGradient>
-      </defs>
-    </svg>
-    <div class="values-header">
-      <h2>Our Core Values</h2>
-    </div>
-    <div class="values-grid">
-      <div class="value-card">
-        <div class="value-icon">
-          <svg viewBox="0 0 24 24" class="val-svg" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M2 12a10 10 0 0 1 18.5-5" stroke="url(#val-privacy-grad)"></path>
-            <path d="M5 12a7 7 0 0 1 12.5-3" stroke="var(--text)"></path>
-            <path d="M8 12a4 4 0 0 1 6.5-1.5" stroke="url(#val-privacy-grad)"></path>
-            <circle cx="12" cy="12" r="1" fill="var(--text)"></circle>
-          </svg>
+    <nav class="navbar">
+      <a href="Index.html" class="logo">
+        <div class="logo-icon">
+          <img src="assets/logo.png" alt="Matri Sathi Logo" />
         </div>
-        <div class="value-title">Absolute Privacy</div>
-        <div class="value-desc">Your child's data is sacred. All our AI models process video and audio feeds locally on-device using end-to-end encryption. No feeds are ever stored on our servers.</div>
-      </div>
-      <div class="value-card">
-        <div class="value-icon">
-          <svg viewBox="0 0 24 24" class="val-svg" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10" stroke="url(#val-speed-grad)" stroke-dasharray="3 2"></path>
-            <path d="M12 12L16 8" stroke="var(--text)" stroke-width="2.5"></path>
-            <circle cx="12" cy="12" r="2" fill="var(--text)"></circle>
-          </svg>
+        <div>
+          <div class="logo-text">Matri Sathi</div>
+          <span class="logo-sub">Child Guardian</span>
         </div>
-        <div class="value-title">Zero Latency</div>
-        <div class="value-desc">In critical moments, every millisecond counts. Our infrastructure is optimized for real-time inference, delivering alerts to your devices instantly.</div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="Index.html">Home</a></li>
+        <li><a href="about.html" class="active-link">About Us</a></li>
+      </ul>
+      <div class="nav-right">
+        <button class="theme-btn" id="themeBtn">
+          <div class="theme-track">
+            <div class="theme-thumb" id="themeThumb">
+              <span id="themeIcon">🌙</span>
+            </div>
+          </div>
+        </button>
       </div>
-      <div class="value-card">
-        <div class="value-icon">
-          <svg viewBox="0 0 24 24" class="val-svg" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="url(#val-empathy-grad)" stroke-width="1.5"></path>
-            <circle cx="10" cy="9" r="2" stroke="var(--text)"></circle>
-            <circle cx="14" cy="9" r="2" stroke="var(--text)"></circle>
-          </svg>
+    </nav>
+
+    <main>
+      <div class="about-hero">
+        <div class="badge">✦ Our Mission</div>
+        <h1>Protecting what <br /><span>matters most.</span></h1>
+        <p>
+          Matri Sathi is dedicated to bringing cutting-edge artificial
+          intelligence to the most critical job in the world: parenthood. We
+          build intelligent tools that offer unparalleled peace of mind.
+        </p>
+      </div>
+
+      <div class="story-grid">
+        <div class="story-text">
+          <h2>The Genesis of Matri Sathi</h2>
+          <p>
+            Parenthood is a beautiful journey, but it is often accompanied by
+            sleepless nights and constant worry. We realized that traditional
+            baby monitors were passive—they only showed you what was happening,
+            relying entirely on the parent's vigilance.
+          </p>
+          <p>
+            We built Matri Sathi to be an active guardian. By utilizing
+            state-of-the-art computer vision and audio classification models,
+            Matri Sathi doesn't just watch; it understands. It can differentiate
+            between a cry of hunger and a cry of pain. It knows when a sleeping
+            position becomes unsafe.
+          </p>
+          <p>
+            Our goal isn't to replace parents, but to give them a reliable,
+            untiring partner that never blinks.
+          </p>
         </div>
-        <div class="value-title">Empathy in Design</div>
-        <div class="value-desc">We build technology that cares. Our interfaces are designed to be calming, intuitive, and accessible, reducing anxiety rather than adding to it.</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="team-section">
-    <div class="team-header">
-      <h2>Meet the Team</h2>
-    </div>
-
-    <!-- Mentor Section -->
-    <div style="display: flex; justify-content: center; margin-bottom: 40px;">
-      <div class="team-card" style="max-width: 280px; width: 100%;">
-        <div class="team-photo-placeholder">
-          <span>Photo<br>Space</span>
+        <div class="story-visual">
+          <div class="visual-icon">
+            <img
+              src="assets/infant3.png"
+              alt="Sleeping infant illustration"
+              style="
+                width: 220px;
+                height: 220px;
+                object-fit: contain;
+                filter: drop-shadow(0 0 30px rgba(192, 132, 252, 0.35));
+              "
+            />
+          </div>
         </div>
-        <div class="team-name">Aditi Sengupta</div>
-        <div class="team-role" style="color: var(--accent4);">Project Mentor</div>
-        <div class="team-desc">Guiding the project vision and providing invaluable expert insights.</div>
       </div>
-    </div>
 
-    <div class="team-grid">
-      <!-- Team Member 1 -->
-      <div class="team-card">
-        <div class="team-photo">
-          <img src="assets/Bishal.jpeg" alt="Bishal">
+      <div class="values-section">
+        <!-- SVG Defs for Core Values Gradients -->
+        <svg style="width: 0; height: 0; position: absolute" aria-hidden="true">
+          <defs>
+            <linearGradient
+              id="val-privacy-grad"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stop-color="#818cf8" />
+              <stop offset="100%" stop-color="#c084fc" />
+            </linearGradient>
+            <linearGradient
+              id="val-speed-grad"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stop-color="#f59e0b" />
+              <stop offset="100%" stop-color="#ef4444" />
+            </linearGradient>
+            <linearGradient
+              id="val-empathy-grad"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stop-color="#ec4899" />
+              <stop offset="100%" stop-color="#f43f5e" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="values-header">
+          <h2>Our Core Values</h2>
         </div>
-        <div class="team-name">Bishal</div>
-        <div class="team-role">Visionary & Strategy</div>
-        <div class="team-desc">Dedicated to building seamless user experiences and bringing the vision of Matri Sathi to life.</div>
-      </div>
-      <!-- Team Member 2 -->
-      <div class="team-card">
-        <div class="team-photo">
-          <img src="assets/Tannu.jpeg" alt="Tannu">
+        <div class="values-grid">
+          <div class="value-card">
+            <div class="value-icon">
+              <svg
+                viewBox="0 0 24 24"
+                class="val-svg"
+                fill="none"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M2 12a10 10 0 0 1 18.5-5"
+                  stroke="url(#val-privacy-grad)"
+                ></path>
+                <path d="M5 12a7 7 0 0 1 12.5-3" stroke="var(--text)"></path>
+                <path
+                  d="M8 12a4 4 0 0 1 6.5-1.5"
+                  stroke="url(#val-privacy-grad)"
+                ></path>
+                <circle cx="12" cy="12" r="1" fill="var(--text)"></circle>
+              </svg>
+            </div>
+            <div class="value-title">Absolute Privacy</div>
+            <div class="value-desc">
+              Your child's data is sacred. All our AI models process video and
+              audio feeds locally on-device using end-to-end encryption. No
+              feeds are ever stored on our servers.
+            </div>
+          </div>
+          <div class="value-card">
+            <div class="value-icon">
+              <svg
+                viewBox="0 0 24 24"
+                class="val-svg"
+                fill="none"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M12 2a10 10 0 0 1 10 10M12 22a10 10 0 0 1-10-10"
+                  stroke="url(#val-speed-grad)"
+                  stroke-dasharray="3 2"
+                ></path>
+                <path
+                  d="M12 12L16 8"
+                  stroke="var(--text)"
+                  stroke-width="2.5"
+                ></path>
+                <circle cx="12" cy="12" r="2" fill="var(--text)"></circle>
+              </svg>
+            </div>
+            <div class="value-title">Zero Latency</div>
+            <div class="value-desc">
+              In critical moments, every millisecond counts. Our infrastructure
+              is optimized for real-time inference, delivering alerts to your
+              devices instantly.
+            </div>
+          </div>
+          <div class="value-card">
+            <div class="value-icon">
+              <svg
+                viewBox="0 0 24 24"
+                class="val-svg"
+                fill="none"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                  stroke="url(#val-empathy-grad)"
+                  stroke-width="1.5"
+                ></path>
+                <circle cx="10" cy="9" r="2" stroke="var(--text)"></circle>
+                <circle cx="14" cy="9" r="2" stroke="var(--text)"></circle>
+              </svg>
+            </div>
+            <div class="value-title">Empathy in Design</div>
+            <div class="value-desc">
+              We build technology that cares. Our interfaces are designed to be
+              calming, intuitive, and accessible, reducing anxiety rather than
+              adding to it.
+            </div>
+          </div>
         </div>
-        <div class="team-name">Tannu</div>
-        <div class="team-role">AI Research & Models</div>
-        <div class="team-desc">Passionate about training robust computer vision and audio classification models for real-time safety.</div>
       </div>
-      <!-- Team Member 3 -->
-      <div class="team-card">
-        <div class="team-photo">
-          <img src="assets/Ritam.jpeg" alt="Ritam">
+
+      <div class="team-section">
+        <div class="team-header">
+          <h2>Meet the Team</h2>
         </div>
-        <div class="team-name">Ritam</div>
-        <div class="team-role">Systems & Architecture</div>
-        <div class="team-desc">Focused on optimizing infrastructure and ensuring zero latency for instant push notifications.</div>
-      </div>
-      <!-- Team Member 4 -->
-      <div class="team-card">
-        <div class="team-photo">
-          <img src="assets/subhodeep.jpeg" alt="Subhodeep">
+
+        <!-- Mentor Section -->
+        <div
+          style="display: flex; justify-content: center; margin-bottom: 40px"
+        >
+          <div class="team-card" style="max-width: 280px; width: 100%">
+            <div class="team-photo-placeholder">
+              <span>Photo<br />Space</span>
+            </div>
+            <div class="team-name">Aditi Sengupta</div>
+            <div class="team-role" style="color: var(--accent4)">
+              Project Mentor
+            </div>
+            <div class="team-desc">
+              Guiding the project vision and providing invaluable expert
+              insights.
+            </div>
+          </div>
         </div>
-        <div class="team-name">Subhodeep</div>
-        <div class="team-role">Privacy & Security</div>
-        <div class="team-desc">Committed to maintaining absolute privacy and end-to-end encryption for all child monitoring data.</div>
+
+        <div class="team-grid">
+          <!-- Team Member 1 -->
+          <div class="team-card">
+            <div class="team-photo">
+              <img src="assets/Bishal.jpeg" alt="Bishal" />
+            </div>
+            <div class="team-name">Bishal</div>
+            <div class="team-role">Visionary & Strategy</div>
+            <div class="team-desc">
+              Dedicated to building seamless user experiences and bringing the
+              vision of Matri Sathi to life.
+            </div>
+          </div>
+          <!-- Team Member 2 -->
+          <div class="team-card">
+            <div class="team-photo">
+              <img src="assets/Tannu.jpeg" alt="Tannu" />
+            </div>
+            <div class="team-name">Tannu</div>
+            <div class="team-role">AI Research & Models</div>
+            <div class="team-desc">
+              Passionate about training robust computer vision and audio
+              classification models for real-time safety.
+            </div>
+          </div>
+          <!-- Team Member 3 -->
+          <div class="team-card">
+            <div class="team-photo">
+              <img src="assets/Ritam.jpeg" alt="Ritam" />
+            </div>
+            <div class="team-name">Ritam</div>
+            <div class="team-role">Systems & Architecture</div>
+            <div class="team-desc">
+              Focused on optimizing infrastructure and ensuring zero latency for
+              instant push notifications.
+            </div>
+          </div>
+          <!-- Team Member 4 -->
+          <div class="team-card">
+            <div class="team-photo">
+              <img src="assets/subhodeep.jpeg" alt="Subhodeep" />
+            </div>
+            <div class="team-name">Subhodeep</div>
+            <div class="team-role">Privacy & Security</div>
+            <div class="team-desc">
+              Committed to maintaining absolute privacy and end-to-end
+              encryption for all child monitoring data.
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</main>
+    </main>
 
-<footer>
-  <p>Made with ❤️ for every parent · <span>Matri Sathi</span> © 2025 · AI-Powered Child Safety</p>
-</footer>
+    <footer>
+      <p>
+        Made with ❤️ for every parent · <span>Matri Sathi</span> © 2025 ·
+        AI-Powered Child Safety
+      </p>
+    </footer>
 
-<script>
-// Theme toggle logic
-const themeBtn = document.getElementById('themeBtn');
-const html = document.documentElement;
-const themeIcon = document.getElementById('themeIcon');
-let isDark = html.getAttribute('data-theme') === 'dark';
+    <script>
+      // Theme toggle logic
+      const themeBtn = document.getElementById("themeBtn");
+      const html = document.documentElement;
+      const themeIcon = document.getElementById("themeIcon");
+      let isDark = html.getAttribute("data-theme") === "dark";
 
-if (themeIcon) {
-  themeIcon.textContent = isDark ? '🌙' : '☀️';
-}
+      if (themeIcon) {
+        themeIcon.textContent = isDark ? "🌙" : "☀️";
+      }
 
-themeBtn.addEventListener('click', () => {
-  isDark = !isDark;
-  const newTheme = isDark ? 'dark' : 'light';
-  html.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
-  if (themeIcon) {
-    themeIcon.textContent = isDark ? '🌙' : '☀️';
-  }
-});
-</script>
-</body>
+      themeBtn.addEventListener("click", () => {
+        isDark = !isDark;
+        const newTheme = isDark ? "dark" : "light";
+        html.setAttribute("data-theme", newTheme);
+        localStorage.setItem("theme", newTheme);
+        if (themeIcon) {
+          themeIcon.textContent = isDark ? "🌙" : "☀️";
+        }
+      });
+    </script>
+  </body>
 </html>
