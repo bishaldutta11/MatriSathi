@@ -287,8 +287,8 @@ inactive_time ≥ 5s  ────────────────→  INACT
 ### Prerequisites
 
 - Python 3.9 or higher
-- A working webcam (USB or built-in)
 - `pip` package manager
+- A webcam is **optional** — the server runs without one (live feed will show a placeholder)
 
 ### 1. Clone the Repository
 
@@ -300,22 +300,21 @@ cd MatriSathi
 ### 2. Install Dependencies
 
 ```bash
-pip install fastapi uvicorn opencv-python numpy ultralytics
+pip install -r requirements.txt
 ```
 
 ### 3. Verify Model Files
 
-Ensure the following model files are in place:
+The custom sleep classifier model is included in the repository:
 
 ```
 MatriSathi/
 ├── models/
-│   └── infant_sleep_position.pt   ← custom sleep classifier (~49.6 MB)
-└── yolov8s.pt                     ← auto-downloaded by Ultralytics if missing
+│   └── infant_sleep_position.pt   ← custom sleep classifier (~49.6 MB, included in repo)
+└── yolov8s.pt                     ← auto-downloaded by Ultralytics on first run
 ```
 
-> ⚠️ **Note:** `*.pt` model files are excluded from git via `.gitignore` due to their size.  
-> Obtain `infant_sleep_position.pt` from the team or contact [Tannu](mailto:) (AI Research lead).
+> **Note:** `yolov8s.pt` (~22.5 MB) is not included in the repo but will be **automatically downloaded** by the Ultralytics library on first run. Internet connection is required for the first launch only.
 
 ### 4. Run the Server
 
@@ -328,6 +327,8 @@ Or with Uvicorn directly:
 ```bash
 uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 ```
+
+The server will print the local and network URLs on startup. If no camera is detected, the server will still start and serve the web interface — only the live video feed will show a placeholder.
 
 ### 5. Open the Dashboard
 
@@ -366,7 +367,8 @@ MatriSathi/
 │   └── subhodeep.jpeg          # Team photo
 │
 ├── 🔧 yolov8s.pt               # YOLOv8s pretrained weights (COCO, auto-downloaded)
-├── 📋 .gitignore               # Excludes *.pt, __pycache__, venv, etc.
+├── 📋 requirements.txt         # Python dependencies for pip install
+├── 📋 .gitignore               # Excludes yolov8s.pt, __pycache__, venv, etc.
 └── 📖 README.md                # This file
 ```
 
