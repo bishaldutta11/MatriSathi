@@ -490,7 +490,7 @@ main {
   background: radial-gradient(circle at 50% 50%, var(--vis-color, rgba(192,132,252,0.15)), transparent 70%);
 }
 .det-icon-big {
-  font-size: 64px; position: relative; z-index: 1;
+  font-size: 110px; position: relative; z-index: 1;
   animation: iconFloat 3s ease-in-out infinite;
 }
 @keyframes iconFloat {
@@ -1049,6 +1049,7 @@ footer span { color: var(--accent); }
   <ul class="nav-links">
     <li><a href="#monitoring">Monitoring</a></li>
     <li><a href="#live">Live Feed</a></li>
+    <li><a href="sleep_position.html">Sleep Monitor</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="about.html" id="navAboutLink">About Us</a></li>
   </ul>
@@ -1159,12 +1160,8 @@ footer span { color: var(--accent); }
       <div class="det-card" onclick="triggerCryAlert()">
         <div class="det-visual" style="--vis-color: rgba(192,132,252,0.15)">
           <div class="det-visual-bg"></div>
-          <div class="det-icon-big">👂</div>
-          <div class="det-waves" style="--wave-color: #c084fc">
-            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-            <div class="wave-bar"></div><div class="wave-bar"></div>
-          </div>
+          <div class="det-icon-big"><img src="assets/infant crying 1.png" alt="Infant Crying" style="width: 135px; height: 135px; object-fit: contain; margin-top: 50px;"></div>
+
           <div class="det-badge badge-ai">CNN Model</div>
         </div>
         <div class="det-body">
@@ -1189,14 +1186,11 @@ footer span { color: var(--accent); }
       </div>
 
       <!-- Sleep Position -->
-      <div class="det-card" onclick="window.location.href='/sleep_position'" style="cursor:pointer;">
+      <div class="det-card" onclick="window.location.href='sleep_position.html'" style="cursor:pointer;">
         <div class="det-visual" style="--vis-color: rgba(52,211,153,0.12)">
           <div class="det-visual-bg"></div>
-          <div class="det-icon-big">😴</div>
-          <div class="det-waves" style="--wave-color: #34d399">
-            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-            <div class="wave-bar"></div><div class="wave-bar"></div>
-          </div>
+          <div class="det-icon-big"><img src="assets/infant sleep1.png" alt="Infant Sleeping" style="width: 135px; height: 135px; object-fit: contain; margin-top: 50px;"></div>
+
           <div class="det-badge badge-live">Active</div>
         </div>
         <div class="det-body">
@@ -1230,12 +1224,8 @@ footer span { color: var(--accent); }
       <div class="det-card" onclick="checkActivity()">
         <div class="det-visual" style="--vis-color: rgba(251,146,60,0.1)">
           <div class="det-visual-bg"></div>
-          <div class="det-icon-big">🎥</div>
-          <div class="det-waves" style="--wave-color: #fb923c">
-            <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-            <div class="wave-bar"></div><div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-          </div>
+          <div class="det-icon-big"><img src="assets/infant camera.png" alt="Infant Camera" style="width: 135px; height: 135px; object-fit: contain; margin-top: 50px;"></div>
+
           <div class="det-badge badge-alert">30min Alert</div>
         </div>
         <div class="det-body">

@@ -423,10 +423,12 @@ def get_index_alias():
     return FileResponse("Index.html")
 
 @app.get("/sleep_position")
+@app.get("/sleep_position.html")
 def get_sleep_position():
     return FileResponse("sleep_position.html")
 
 @app.get("/about")
+@app.get("/about.html")
 def get_about():
     return FileResponse("about.html")
 
