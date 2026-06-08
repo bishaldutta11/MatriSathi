@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>About Us — Matri Sathi</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -96,7 +98,8 @@ body::before {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   overflow: hidden;
 }
-.logo-icon img { width: 100%; height: 100%; object-fit: cover; }
+.logo-icon img { width: 100%; height: 100%; object-fit: cover; filter: invert(1); transition: filter 0.4s ease; }
+[data-theme="light"] .logo-icon img { filter: none; }
 .logo:hover .logo-icon { transform: rotate(10deg) scale(1.1); box-shadow: 0 0 35px var(--glow); }
 .logo-text {
   font-family: 'Playfair Display', serif;
@@ -297,18 +300,16 @@ footer span { color: var(--accent); }
 <div class="ambient amb2"></div>
 
 <nav class="navbar">
-  <a href="/" class="logo">
-    <div class="logo-icon"><img src="/assets/logo.png" alt="Matri Sathi Logo"></div>
+  <a href="Index.html" class="logo">
+    <div class="logo-icon"><img src="assets/logo.png" alt="Matri Sathi Logo"></div>
     <div>
       <div class="logo-text">Matri Sathi</div>
       <span class="logo-sub">Child Guardian</span>
     </div>
   </a>
   <ul class="nav-links">
-    <li><a href="/#monitoring">Monitoring</a></li>
-    <li><a href="/#live">Live Feed</a></li>
-    <li><a href="/#features">Features</a></li>
-    <li><a href="/about" class="active-link">About Us</a></li>
+    <li><a href="Index.html">Home</a></li>
+    <li><a href="about.html" class="active-link">About Us</a></li>
   </ul>
   <div class="nav-right">
     <button class="theme-btn" id="themeBtn">

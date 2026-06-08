@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Matri Sathi — Intelligent Child Monitoring</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -122,7 +124,10 @@ body::before {
 }
 .logo-icon img {
   width: 100%; height: 100%; object-fit: cover;
+  filter: invert(1);
+  transition: filter 0.4s ease;
 }
+[data-theme="light"] .logo-icon img { filter: none; }
 .logo:hover .logo-icon { transform: rotate(10deg) scale(1.1); box-shadow: 0 0 35px var(--glow); }
 .logo-text {
   font-family: 'Playfair Display', serif;
@@ -874,6 +879,122 @@ footer span { color: var(--accent); }
   .det-card { transform-style: preserve-3d; }
   .feat-card { transform-style: preserve-3d; }
 }
+
+/* ===== CONNECTION SETTINGS MODAL ===== */
+.settings-btn {
+  width: 38px; height: 38px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: var(--text2);
+  transition: all 0.3s ease;
+  position: relative;
+}
+.settings-btn:hover { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 16px var(--glow); transform: scale(1.08); }
+.settings-btn .settings-dot {
+  position: absolute; top: 4px; right: 4px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent3);
+  display: none;
+}
+.settings-btn .settings-dot.active { display: block; animation: pulseDot 2s ease infinite; }
+@keyframes pulseDot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.7); }
+}
+.conn-modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  align-items: center; justify-content: center;
+}
+.conn-modal-overlay.open { display: flex; }
+.conn-modal {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  width: 420px; max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  animation: modalIn 0.3s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.conn-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.conn-modal-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700;
+}
+.conn-modal-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text2); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease;
+}
+.conn-modal-close:hover { background: var(--danger); color: white; border-color: var(--danger); }
+.conn-field-label {
+  font-size: 11px; font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text3); margin-bottom: 8px;
+}
+.conn-field-hint {
+  font-size: 12px; color: var(--text3); margin-bottom: 16px; line-height: 1.6;
+}
+.conn-input-row {
+  display: flex; gap: 10px; margin-bottom: 20px;
+}
+.conn-input {
+  flex: 1; padding: 12px 16px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  font-family: 'JetBrains Mono', monospace; font-size: 14px;
+  outline: none; transition: all 0.3s ease;
+}
+.conn-input::placeholder { color: var(--text3); }
+.conn-input:focus { border-color: var(--accent); box-shadow: 0 0 16px var(--glow); }
+.conn-status {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg3); border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.conn-status-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--text3); flex-shrink: 0;
+}
+.conn-status-dot.connected { background: var(--accent3); box-shadow: 0 0 8px rgba(52,211,153,0.5); }
+.conn-status-dot.disconnected { background: var(--danger); box-shadow: 0 0 8px rgba(248,113,113,0.5); }
+.conn-btn-row { display: flex; gap: 10px; }
+.conn-btn-save {
+  flex: 1; padding: 12px 20px;
+  background: linear-gradient(135deg, var(--accent3), #059669);
+  color: white; border: none; border-radius: 50px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.3s ease;
+}
+.conn-btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(52,211,153,0.4); }
+.conn-btn-reset {
+  padding: 12px 20px;
+  background: var(--surface2); color: var(--text2);
+  border: 1px solid var(--border); border-radius: 50px;
+  font-size: 14px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.3s ease;
+}
+.conn-btn-reset:hover { background: var(--danger); color: white; border-color: var(--danger); }
 </style>
 </head>
 <body>
@@ -899,13 +1020,17 @@ footer span { color: var(--accent); }
     <li><a href="#monitoring">Monitoring</a></li>
     <li><a href="#live">Live Feed</a></li>
     <li><a href="#features">Features</a></li>
-    <li><a href="/about" id="navAboutLink">About Us</a></li>
+    <li><a href="about.html" id="navAboutLink">About Us</a></li>
   </ul>
   <div class="nav-right">
     <div class="status-pill">
       <div class="status-dot"></div>
       LIVE
     </div>
+    <button class="settings-btn" id="settingsBtn" aria-label="Connection Settings" title="Backend Connection Settings">
+      ⚙️
+      <div class="settings-dot" id="settingsDot"></div>
+    </button>
     <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">
       <div class="theme-track">
         <div class="theme-thumb" id="themeThumb">
@@ -920,6 +1045,29 @@ footer span { color: var(--accent); }
     </button>
   </div>
 </nav>
+
+<!-- Connection Settings Modal -->
+<div class="conn-modal-overlay" id="connModalOverlay">
+  <div class="conn-modal">
+    <div class="conn-modal-header">
+      <div class="conn-modal-title">⚙️ Backend Connection</div>
+      <button class="conn-modal-close" id="connModalClose">✕</button>
+    </div>
+    <div class="conn-field-label">Backend Host</div>
+    <div class="conn-field-hint">Enter the IP address and port of the device running <code style="color:var(--accent)">app.py</code>. Leave blank to auto-detect from the current page URL.</div>
+    <div class="conn-input-row">
+      <input type="text" class="conn-input" id="connInput" placeholder="e.g. 192.168.1.15:8000">
+    </div>
+    <div class="conn-status">
+      <div class="conn-status-dot" id="connStatusDot"></div>
+      <span id="connStatusText">Not configured — using page origin</span>
+    </div>
+    <div class="conn-btn-row">
+      <button class="conn-btn-save" id="connBtnSave">💾 Save & Connect</button>
+      <button class="conn-btn-reset" id="connBtnReset">↺ Reset</button>
+    </div>
+  </div>
+</div>
 
 <!-- Main -->
 <main>
@@ -937,12 +1085,7 @@ footer span { color: var(--accent); }
     </div>
     <div class="hero-visual">
       <div class="monitor-3d">
-        <div class="orb-main">
-          <div class="orb-icon">🍼</div>
-        </div>
-        <div class="orb-ring ring1"></div>
-        <div class="orb-ring ring2"></div>
-        <div class="orb-ring ring3"></div>
+        <img src="assets/infant1.png" alt="Sleeping infant illustration" style="width: 280px; height: 280px; object-fit: contain; animation: floatInfant 6s ease-in-out infinite; filter: drop-shadow(0 0 30px rgba(192,132,252,0.3)); position: relative; z-index: 1;">
         <div class="floating-cards">
           <div class="float-card fc1">✅ Breathing Normal</div>
           <div class="float-card fc2">🔊 Cry Detected</div>
@@ -1112,7 +1255,7 @@ footer span { color: var(--accent); }
 
       <div class="live-grid">
         <div class="feed-frame" style="position: relative;">
-          <img id="videoFeed" src="/video_feed"
+          <img id="videoFeed" src=""
             style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0;"
             onload="onFeedLoad()"
             onerror="onFeedError()">
@@ -1348,6 +1491,102 @@ function initWaveform(id, count) {
 initWaveform('waveform', 30);
 initWaveform('waveform2', 30);
 
+// ===== BACKEND HOST CONFIGURATION =====
+function getBackendHost() {
+  const saved = localStorage.getItem('matrisathi_backend_host');
+  if (saved && saved.trim()) return saved.trim();
+  return window.location.host; // fallback to page origin
+}
+
+function getBackendHttpBase() {
+  const host = getBackendHost();
+  const proto = window.location.protocol === 'https:' ? 'https:' : 'http:';
+  // If host looks like it already has a protocol, strip it
+  const cleanHost = host.replace(/^https?:\/\//, '');
+  return `${proto}//${cleanHost}`;
+}
+
+function getBackendWsUrl() {
+  const host = getBackendHost();
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const cleanHost = host.replace(/^https?:\/\//, '');
+  return `${proto}//${cleanHost}/ws`;
+}
+
+// ===== CONNECTION SETTINGS MODAL =====
+(function initConnModal() {
+  const overlay = document.getElementById('connModalOverlay');
+  const input = document.getElementById('connInput');
+  const statusDot = document.getElementById('connStatusDot');
+  const statusText = document.getElementById('connStatusText');
+  const dot = document.getElementById('settingsDot');
+
+  // Load saved value
+  const saved = localStorage.getItem('matrisathi_backend_host');
+  if (saved) {
+    input.value = saved;
+    dot.classList.add('active');
+    statusText.textContent = 'Configured: ' + saved;
+    statusDot.classList.add('disconnected'); // will update on WS connect
+  }
+
+  document.getElementById('settingsBtn').addEventListener('click', () => overlay.classList.add('open'));
+  document.getElementById('connModalClose').addEventListener('click', () => overlay.classList.remove('open'));
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
+
+  document.getElementById('connBtnSave').addEventListener('click', () => {
+    const val = input.value.trim();
+    if (val) {
+      localStorage.setItem('matrisathi_backend_host', val);
+      dot.classList.add('active');
+      showToast('✅ Backend host saved — reconnecting...', 'success');
+    } else {
+      localStorage.removeItem('matrisathi_backend_host');
+      dot.classList.remove('active');
+      showToast('↺ Reset to auto-detect', 'success');
+    }
+    overlay.classList.remove('open');
+    // Reconnect everything
+    reconnectBackend();
+  });
+
+  document.getElementById('connBtnReset').addEventListener('click', () => {
+    input.value = '';
+    localStorage.removeItem('matrisathi_backend_host');
+    dot.classList.remove('active');
+    statusText.textContent = 'Not configured — using page origin';
+    statusDot.className = 'conn-status-dot';
+    showToast('↺ Reset to auto-detect — reconnecting...', 'success');
+    overlay.classList.remove('open');
+    reconnectBackend();
+  });
+})();
+
+function updateConnStatus(connected) {
+  const statusDot = document.getElementById('connStatusDot');
+  const statusText = document.getElementById('connStatusText');
+  if (connected) {
+    statusDot.className = 'conn-status-dot connected';
+    statusText.textContent = 'Connected to ' + getBackendHost();
+  } else {
+    statusDot.className = 'conn-status-dot disconnected';
+    const saved = localStorage.getItem('matrisathi_backend_host');
+    statusText.textContent = saved ? 'Disconnected from ' + saved : 'Not configured — using page origin';
+  }
+}
+
+function reconnectBackend() {
+  // Close existing WebSocket
+  if (socket && socket.readyState <= 1) {
+    socket.close();
+  }
+  // Update video feed
+  const img = document.getElementById('videoFeed');
+  if (img) img.src = getBackendHttpBase() + '/video_feed?' + Date.now();
+  // Reconnect WebSocket
+  setTimeout(connectWebSocket, 500);
+}
+
 // ===== VIDEO FEED HANDLERS =====
 function onFeedLoad() {
   // Hide fallback emoji, show real camera stream
@@ -1361,26 +1600,33 @@ function onFeedError() {
   const container = document.getElementById('feedEmojiContainer');
   const statusMsg = document.getElementById('feedStatusMsg');
   if (container) container.style.display = 'flex';
-  if (statusMsg) statusMsg.textContent = 'Backend offline — start app.py to activate live feed';
+  if (statusMsg) statusMsg.textContent = 'Backend offline — click ⚙️ to configure backend IP';
   // Retry the feed every 5 seconds
   const img = document.getElementById('videoFeed');
   if (img) {
     setTimeout(() => {
-      img.src = '/video_feed?' + Date.now();
+      img.src = getBackendHttpBase() + '/video_feed?' + Date.now();
     }, 5000);
   }
 }
 
+// Initialize video feed with correct backend URL
+(function initVideoFeed() {
+  const img = document.getElementById('videoFeed');
+  if (img) img.src = getBackendHttpBase() + '/video_feed';
+})();
+
 // ===== BACKEND WEBSOCKET INTEGRATION =====
-const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
 let socket;
 
 function connectWebSocket() {
+  const wsUrl = getBackendWsUrl();
+  console.log('[MatriSathi] Connecting to WebSocket:', wsUrl);
   socket = new WebSocket(wsUrl);
 
   socket.onopen = () => {
     console.log('Connected to MatriSathi WebSocket');
+    updateConnStatus(true);
     showToast('🔗 Backend Connected', 'success');
   };
 
@@ -1637,6 +1883,7 @@ function connectWebSocket() {
 
   socket.onclose = () => {
     console.log('WebSocket closed. Retrying in 3 seconds...');
+    updateConnStatus(false);
     setTimeout(connectWebSocket, 3000);
   };
 
