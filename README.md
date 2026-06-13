@@ -301,14 +301,17 @@ inactive_time ≥ 5s  ────────────────→  INACT
 |-------|-----------|---------|
 | **Backend** | [FastAPI](https://fastapi.tiangolo.com) | Async HTTP + WebSocket server |
 | **ML Framework** | [Ultralytics YOLOv8](https://ultralytics.com) | Model loading, inference, tracking |
+| **Deep Learning** | [TensorFlow](https://tensorflow.org) & [Keras](https://keras.io) | Backend and functional model execution for infant cry classification |
+| **Audio Processing** | [Librosa](https://librosa.org) | Dynamic acoustic feature extraction (MFCCs, Mel-spectrogram, Chroma, etc.) |
 | **Computer Vision** | [OpenCV](https://opencv.org) | Camera capture, frame processing, MJPEG encoding |
-| **Numerics** | [NumPy](https://numpy.org) | Pixel-diff motion scoring, array ops |
+| **Numerics** | [NumPy](https://numpy.org) & [h5py](https://www.h5py.org) | Array operations, pixel-diff scoring, and weight files extraction |
 | **Concurrency** | Python `threading` + `asyncio` | Background camera loop + async WebSocket broadcasts |
 | **Streaming** | MJPEG over HTTP (`StreamingResponse`) | Low-latency real-time video delivery |
 | **Real-time UI** | Native WebSocket (`ws://`) | State pushed to all connected browsers |
 | **Frontend** | Vanilla HTML5 + CSS3 + JavaScript | No framework dependencies |
 | **Fonts** | Google Fonts (Playfair Display, DM Sans, JetBrains Mono) | Premium typography |
 | **Serving** | Uvicorn (ASGI) | Production-grade async server |
+
 
 ---
 
@@ -335,16 +338,18 @@ pip install -r requirements.txt
 
 ### 3. Verify Model Files
 
-The custom sleep classifier model is included in the repository:
+The custom classification models are included in the repository:
 
 ```
 MatriSathi/
 ├── models/
-│   └── infant_sleep_position.pt   ← custom sleep classifier (~49.6 MB, included in repo)
+│   ├── infant_sleep_position.pt   ← custom sleep classifier (~49.6 MB, included in repo)
+│   └── infant_cry_detect.keras     ← custom infant cry classifier (~4.0 MB, included in repo)
 └── yolov8s.pt                     ← auto-downloaded by Ultralytics on first run
 ```
 
-> **Note:** `yolov8s.pt` (~22.5 MB) is not included in the repo but will be **automatically downloaded** by the Ultralytics library on first run. Internet connection is required for the first launch only.
+> **Note:** `yolov8s.pt` (~22.5 MB) is not included in the repo but will be **automatically downloaded** by the Ultralytics library on first run. Internet connection is required for the first launch only. If the required libraries (`tensorflow`, `keras`, `librosa`, `h5py`) or the Keras model file are missing, the server will gracefully fallback to a high-fidelity simulated cry prediction mode so that all frontend interactions can still be fully tested.
+
 
 ### 4. Run the Server
 
