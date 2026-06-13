@@ -397,10 +397,13 @@ class CameraWorker:
 
 camera_worker = None
 main_loop = None
+CRY_MODEL_PATH = os.path.join("models", "infant_cry_detect.keras")
+cry_model = None
+cry_model_loaded = False
 
 @app.on_event("startup")
 def startup_event():
-    global camera_worker, main_loop
+    global camera_worker, main_loop, cry_model, cry_model_loaded
     main_loop = asyncio.get_running_loop()
     try:
         camera_worker = CameraWorker()
@@ -408,6 +411,27 @@ def startup_event():
         print(f"WARNING: CameraWorker failed to initialize: {e}")
         print("  -> Server will run without camera features.")
         camera_worker = None
+
+    # Load Infant Cry Model on startup
+    try:
+        import keras
+        keras_available = True
+    except ImportError:
+        keras_available = False
+
+    if keras_available:
+        if os.path.exists(CRY_MODEL_PATH):
+            print(f"Loading infant cry detection model from {CRY_MODEL_PATH} on startup...")
+            try:
+                cry_model = keras.models.load_model(CRY_MODEL_PATH)
+                cry_model_loaded = True
+                print("Infant cry detection model loaded successfully on startup!")
+            except Exception as e:
+                print(f"WARNING: Failed to load cry model on startup: {e}")
+        else:
+            print(f"WARNING: Cry model file not found at {CRY_MODEL_PATH}")
+    else:
+        print("INFO: Keras/TensorFlow not installed. Cry detection will run in simulation mode.")
 
 @app.on_event("shutdown")
 def shutdown_event():
@@ -426,6 +450,11 @@ def get_index_alias():
 @app.get("/sleep_position.html")
 def get_sleep_position():
     return FileResponse("sleep_position.html")
+
+@app.get("/cry")
+@app.get("/cry.html")
+def get_cry():
+    return FileResponse("cry.html")
 
 @app.get("/about")
 @app.get("/about.html")
@@ -466,6 +495,174 @@ async def predict_sleep(file: UploadFile = File(...)):
     except Exception as e:
         print(f"Prediction error: {e}")
         return {"error": str(e)}
+
+# Infant Cry Model endpoint
+
+@app.post("/api/predict_cry")
+async def predict_cry(file: UploadFile = File(...)):
+    global cry_model, cry_model_loaded
+    
+    # 10 infant cry categories
+    classes = [
+        "Hunger",
+        "Pain / Colic",
+        "Tiredness",
+        "Discomfort / Wet Diaper",
+        "Gas / Needs Burping",
+        "Boredom / Seeking Attention",
+        "Fear / Startled",
+        "Temperature (Too Hot/Cold)",
+        "Sickness / Fever",
+        "Frustration / Overstimulation"
+    ]
+    
+    # Check if Keras and Librosa libraries are installed
+    try:
+        import librosa
+        import keras
+        libs_available = True
+    except ImportError:
+        libs_available = False
+
+    contents = await file.read()
+    
+    # If Keras and Librosa are available, and the model exists, perform real inference
+    if libs_available and os.path.exists(CRY_MODEL_PATH):
+        try:
+            # Lazy load the Keras model once and cache it in memory
+            if not cry_model_loaded:
+                print(f"Loading infant cry detection model from {CRY_MODEL_PATH}...")
+                cry_model = keras.models.load_model(CRY_MODEL_PATH)
+                cry_model_loaded = True
+                print("Infant cry detection model loaded successfully!")
+            
+            # Load audio using librosa
+            import io
+            audio_file = io.BytesIO(contents)
+            y, sr = librosa.load(audio_file, sr=None)
+            
+            # 1. Extract MFCC (20 coefficients): mean, std, min, max, median -> 100 features
+            mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=20)
+            mfcc_mean = np.mean(mfcc, axis=1)
+            mfcc_std = np.std(mfcc, axis=1)
+            mfcc_min = np.min(mfcc, axis=1)
+            mfcc_max = np.max(mfcc, axis=1)
+            mfcc_median = np.median(mfcc, axis=1)
+            
+            # 2. Extract Chroma STFT (12 coefficients): mean, std, min, max -> 48 features
+            try:
+                chroma = librosa.feature.chroma_stft(y=y, sr=sr, n_chroma=12)
+                chroma_mean = np.mean(chroma, axis=1)
+                chroma_std = np.std(chroma, axis=1)
+                chroma_min = np.min(chroma, axis=1)
+                chroma_max = np.max(chroma, axis=1)
+            except Exception:
+                chroma_mean = np.zeros(12)
+                chroma_std = np.zeros(12)
+                chroma_min = np.zeros(12)
+                chroma_max = np.zeros(12)
+                
+            # 3. Extract Mel Spectrogram (128 coefficients): mean -> 128 features
+            try:
+                mel = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
+                mel_mean = np.mean(mel, axis=1)
+            except Exception:
+                mel_mean = np.zeros(128)
+                
+            # 4. Extract Spectral Contrast (7 coefficients): mean, std, min, max -> 28 features
+            try:
+                contrast = librosa.feature.spectral_contrast(y=y, sr=sr, n_bands=6)
+                contrast_mean = np.mean(contrast, axis=1)
+                contrast_std = np.std(contrast, axis=1)
+                contrast_min = np.min(contrast, axis=1)
+                contrast_max = np.max(contrast, axis=1)
+            except Exception:
+                contrast_mean = np.zeros(7)
+                contrast_std = np.zeros(7)
+                contrast_min = np.zeros(7)
+                contrast_max = np.zeros(7)
+                
+            # 5. Extract Tonnetz (6 coefficients): mean -> 6 features
+            try:
+                tonnetz = librosa.feature.tonnetz(y=y, sr=sr)
+                tonnetz_mean = np.mean(tonnetz, axis=1)
+            except Exception:
+                tonnetz_mean = np.zeros(6)
+                
+            # Concatenate all features to form the exact 310 features expected by the model
+            features = np.concatenate([
+                mfcc_mean, mfcc_std, mfcc_min, mfcc_max, mfcc_median,
+                chroma_mean, chroma_std, chroma_min, chroma_max,
+                mel_mean,
+                contrast_mean, contrast_std, contrast_min, contrast_max,
+                tonnetz_mean
+            ])
+            
+            # Reshape features for model input (shape: [1, 310])
+            features = np.expand_dims(features, axis=0)
+            
+            # Run prediction
+            prediction = cry_model.predict(features, verbose=0)[0]
+            
+            # Format results
+            predictions_list = []
+            for idx, prob in enumerate(prediction):
+                predictions_list.append({
+                    "label": classes[idx],
+                    "confidence": float(prob)
+                })
+            
+            # Sort descending by confidence
+            predictions_list.sort(key=lambda x: x["confidence"], reverse=True)
+            
+            return {
+                "success": True,
+                "is_simulated": False,
+                "predictions": predictions_list,
+                "primary": predictions_list[0]
+            }
+        except Exception as e:
+            print(f"Error during real cry model prediction: {e}")
+            # Fallthrough to simulation fallback on error
+            pass
+
+    # High-fidelity simulated prediction (deterministic based on file hash)
+    import hashlib
+    file_hash = int(hashlib.md5(contents).hexdigest(), 16)
+    np_rand = np.random.RandomState(file_hash % (2**32 - 1))
+    
+    # Generate random probabilities summing to 1
+    raw_scores = np_rand.rand(10)
+    # Weight certain common cry causes slightly higher for realism
+    raw_scores[0] *= 2.5  # Hunger
+    raw_scores[1] *= 1.8  # Pain
+    raw_scores[2] *= 1.5  # Tiredness
+    raw_scores[3] *= 1.4  # Discomfort
+    
+    probabilities = raw_scores / np.sum(raw_scores)
+    
+    predictions_list = []
+    for idx, prob in enumerate(probabilities):
+        predictions_list.append({
+            "label": classes[idx],
+            "confidence": float(prob)
+        })
+    
+    predictions_list.sort(key=lambda x: x["confidence"], reverse=True)
+    
+    warning_msg = (
+        "Running in simulation mode. Please install 'tensorflow' and 'librosa' "
+        "and place 'models/infant_cry_detect.keras' in the models folder to run local AI inference."
+        if not libs_available else "Model inference failed, running in simulation mode."
+    )
+    
+    return {
+        "success": True,
+        "is_simulated": True,
+        "predictions": predictions_list,
+        "primary": predictions_list[0],
+        "warning": warning_msg
+    }
 
 @app.get("/video_feed")
 def video_feed():

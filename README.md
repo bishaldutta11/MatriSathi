@@ -62,6 +62,7 @@ The entire system runs **locally** on a single machine — no cloud, no latency,
 | Feature | Description |
 |---------|-------------|
 | 🛌 **Sleep Position Detection** | Custom YOLOv8 model classifies `Back (Safe)` vs `Prone (Danger)` every 10 seconds |
+| 🔊 **Infant Cry Diagnostics** | Standalone audio page uploads audio files or records live microphone with real-time waveform visualization |
 | 🎥 **Live MJPEG Stream** | Real camera feed annotated with bounding boxes, status overlays, and AI labels at ~20 FPS |
 | 📊 **Real-time WebSocket** | Full AI state (position, confidence, motion score, logs) pushed to all browser clients instantly |
 | ⚠️ **Instant Alerts** | Visual banner + toast alerts for prone position and sustained inactivity |
@@ -194,17 +195,46 @@ inactive_time ≥ 5s  ────────────────→  INACT
 
 ---
 
+### Model 3 — Infant Cry Diagnostic Model (infant_cry_detect.keras)
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│            INFANT CRY DETECTION MODEL  (infant_cry_detect.keras)        │
+│                                                                         │
+│  Base Architecture : Functional Dense Neural Network                    │
+│  Task Type         : Acoustic Classification / Event Detection          │
+│  Input Shape       : 1D feature vector of length 310                    │
+│  Preprocessing Lib : librosa (dynamic local feature extraction)         │
+│  Output Classes    : 10 distinct infant need triggers                   │
+│                                                                         │
+│  Output Classes Mapping:                                                │
+│    0: Hunger       1: Pain/Colic  2: Tiredness   3: Discomfort          │
+│    4: Gas/Burp     5: Boredom     6: Fear/Start  7: Temperature         │
+│    8: Sickness     9: Overstimulated                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Feature Extraction Pipeline (310 Features):**
+1. **MFCCs (20 coefficients):** Mean, standard deviation, minimum, maximum, and median computed over time frames ($20 \times 5 = 100$ features).
+2. **Chroma STFT (12 coefficients):** Mean, standard deviation, minimum, and maximum computed over time frames ($12 \times 4 = 48$ features).
+3. **Mel Spectrogram (128 coefficients):** Mean computed over time frames ($128 \times 1 = 128$ features).
+4. **Spectral Contrast (7 bands/coefficients):** Mean, standard deviation, minimum, and maximum computed over time frames ($7 \times 4 = 28$ features).
+5. **Tonnetz (6 chroma dimensions):** Mean computed over time frames ($6 \times 1 = 6$ features).
+* **Total Concat Vector Length:** $100 + 48 + 128 + 28 + 6 = 310$ features.
+
+---
+
 ### Model Comparison Summary
 
-| Aspect | Sleep Position Model | Activity Surveillance Model |
-|--------|---------------------|----------------------------|
-| **Architecture** | YOLOv8 (fine-tuned) | YOLOv8s + ByteTrack |
-| **Weight Size** | ~49.6 MB | ~22.5 MB |
-| **Inference Rate** | Every 10 seconds | Every frame (~20 FPS) |
-| **Task** | Classification | Detection + Tracking + Motion |
-| **Classes** | 2 (Back, Prone) | 80 COCO (uses: Person) |
-| **Output** | Position label + confidence | Motion score + status |
-| **Confidence UI** | Live circle (real model output) | Live circle (motion score) |
+| Aspect | Sleep Position Model | Activity Surveillance Model | Infant Cry Diagnostic Model |
+|--------|---------------------|----------------------------|-----------------------------|
+| **Architecture** | YOLOv8 (fine-tuned) | YOLOv8s + ByteTrack | Functional Dense NN |
+| **Weight Size** | ~49.6 MB | ~22.5 MB | ~4.0 MB |
+| **Inference Rate** | Every 10 seconds | Every frame (~20 FPS) | On demand (user action) |
+| **Task** | Classification | Detection + Tracking + Motion | Acoustic Needs Classification |
+| **Classes** | 2 (Back, Prone) | 80 COCO (uses: Person) | 10 (Hunger, Pain, Tired, etc.) |
+| **Output** | Position label + confidence | Motion score + status | Needs probability list |
+| **Confidence UI** | Live circle (real model output) | Live circle (motion score) | Dynamic circular gauge + bars |
 
 ---
 
@@ -338,6 +368,7 @@ http://localhost:8000
 
 - **Live Feed + AI Dashboard:** `http://localhost:8000`
 - **Sleep Position Module:** `http://localhost:8000/sleep_position`
+- **Infant Cry Analyzer:** `http://localhost:8000/cry` (standalone)
 - **About Us:** `http://localhost:8000/about`
 - **REST API Docs:** `http://localhost:8000/docs`
 
@@ -351,13 +382,15 @@ MatriSathi/
 ├── 📄 Index.html               # Main dashboard (Live Feed, Monitoring, Features)
 ├── 📄 about.html               # Team and mission page
 ├── 📄 sleep_position.html      # Dedicated sleep position monitoring page
+├── 📄 cry.html                 # Dedicated standalone infant cry analyzer page
 │
 ├── 🐍 app.py                   # FastAPI backend — camera, models, WebSocket, routes
 ├── 🐍 motion.py                # Standalone motion detection script (dev utility)
 ├── 🐍 test_backend.py          # Backend unit tests
 │
 ├── 📁 models/
-│   └── infant_sleep_position.pt    # Custom YOLOv8 sleep classifier weights
+│   ├── infant_cry_detect.keras     # Custom Keras infant cry classifier weights (~4 MB)
+│   └── infant_sleep_position.pt    # Custom YOLOv8 sleep classifier weights (~49.6 MB)
 │
 ├── 📁 assets/
 │   ├── logo.png                # Matri Sathi logo
@@ -387,6 +420,32 @@ Serves the About Us team page.
 
 ### `GET /sleep_position`
 Serves the dedicated sleep position monitoring page.
+
+### `GET /cry`
+Serves the dedicated standalone infant cry analyzer page (`cry.html`).
+
+### `POST /api/predict_cry`
+Run the acoustic cry classifier model on an **uploaded audio file** or **recorded audio blob**.
+
+**Request:**
+```
+Content-Type: multipart/form-data
+Body: file=<audio file>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "is_simulated": false,
+  "predictions": [
+    { "label": "Hunger", "confidence": 0.89 },
+    { "label": "Pain / Colic", "confidence": 0.05 },
+    ...
+  ],
+  "primary": { "label": "Hunger", "confidence": 0.89 }
+}
+```
 
 ### `GET /video_feed`
 Returns a **live MJPEG stream** of the annotated camera feed.

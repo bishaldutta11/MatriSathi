@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<script>
+  // Immediately set theme to prevent flickering
+  (function() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  })();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infant Cry Analyzer — MatriSathi</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<meta name="description" content="Analyze infant crying patterns locally using AI. Upload files or record audio to identify hunger, pain, sleepiness, and other infant needs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+  --bg: #0a0a0f;
+  --bg2: #0f0f1a;
+  --bg3: #141426;
+  --surface: rgba(255,255,255,0.04);
+  --surface2: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.08);
+  --text: #f0eeff;
+  --text2: #9890b8;
+  --text3: #5a5278;
+  --accent: #c084fc;
+  --accent2: #818cf8;
+  --accent3: #34d399;
+  --accent4: #fb923c;
+  --accent5: #f472b6;
+  --glow: rgba(192,132,252,0.3);
+  --glow2: rgba(129,140,248,0.2);
+  --danger: #f87171;
+  --warn: #fbbf24;
+  --card-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  --radius: 20px;
+  --radius-sm: 12px;
+  --nav-h: 70px;
+}
+[data-theme="light"] {
+  --bg: #faf8ff;
+  --bg2: #f2eeff;
+  --bg3: #ebe4ff;
+  --surface: rgba(0,0,0,0.04);
+  --surface2: rgba(0,0,0,0.07);
+  --border: rgba(0,0,0,0.1);
+  --text: #1a1230;
+  --text2: #5a4a7a;
+  --text3: #9880c0;
+  --accent: #7c3aed;
+  --accent2: #4f46e5;
+  --accent3: #059669;
+  --accent4: #ea580c;
+  --accent5: #db2777;
+  --glow: rgba(124,58,237,0.2);
+  --glow2: rgba(79,70,229,0.15);
+  --danger: #dc2626;
+  --warn: #d97706;
+  --card-shadow: 0 8px 40px rgba(100,50,200,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+.ambient {
+  position: fixed; pointer-events: none; border-radius: 50%; filter: blur(80px); z-index: 0;
+}
+.amb1 { width: 600px; height: 600px; top: -200px; left: -100px; background: radial-gradient(circle, rgba(192,132,252,0.12) 0%, transparent 70%); animation: floatAmb 12s ease-in-out infinite; }
+.amb2 { width: 500px; height: 500px; bottom: 10%; right: -150px; background: radial-gradient(circle, rgba(129,140,248,0.1) 0%, transparent 70%); animation: floatAmb 15s ease-in-out infinite reverse; }
+.amb3 { width: 400px; height: 400px; top: 50%; left: 40%; background: radial-gradient(circle, rgba(52,211,153,0.07) 0%, transparent 70%); animation: floatAmb 10s ease-in-out infinite 3s; }
+@keyframes floatAmb {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(30px,-20px) scale(1.05); }
+  66% { transform: translate(-20px,30px) scale(0.95); }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+/* ===== NAVBAR ===== */
+.navbar {
+  position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px;
+  background: rgba(10,10,15,0.7);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  z-index: 1000;
+}
+[data-theme="light"] .navbar { background: rgba(250,248,255,0.8); }
+.logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.logo-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 20px var(--glow);
+  overflow: hidden;
+}
+.logo-icon img { width: 100%; height: 100%; object-fit: cover; filter: invert(1); transition: filter 0.4s ease; }
+[data-theme="light"] .logo-icon img { filter: none; }
+.logo-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.logo-sub {
+  font-size: 10px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase;
+  display: block; margin-top: -4px; font-family: 'JetBrains Mono', monospace;
+  -webkit-text-fill-color: var(--text3);
+}
+.nav-right { display: flex; align-items: center; gap: 16px; }
+
+.theme-btn {
+  position: relative; width: 64px; height: 34px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 17px; cursor: pointer;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.theme-btn:hover { border-color: var(--accent); box-shadow: 0 0 20px var(--glow); transform: scale(1.05); }
+.theme-track { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 4px; }
+.theme-thumb {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; line-height: 1;
+  transform: translateX(0);
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 12px var(--glow);
+  position: relative; z-index: 1;
+}
+[data-theme="light"] .theme-thumb { transform: translateX(30px); background: linear-gradient(135deg, #f59e0b, #ef4444); }
+
+/* ===== MAIN CONTENT ===== */
+main {
+  padding-top: calc(var(--nav-h) + 60px);
+  padding-bottom: 80px;
+  position: relative; z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 40px;
+  padding-right: 40px;
+}
+
+/* ===== PAGE HEADER ===== */
+.page-header {
+  text-align: center;
+  margin-bottom: 50px;
+  animation: fadeSlideUp 0.8s ease both;
+}
+.page-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px;
+  background: rgba(192,132,252,0.1);
+  border: 1px solid rgba(192,132,252,0.25);
+  border-radius: 20px; font-size: 12px;
+  color: var(--accent); font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px; margin-bottom: 20px;
+}
+.page-badge-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+  animation: pulseDot 2s ease infinite;
+}
+@keyframes pulseDot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.7); }
+}
+.page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(34px, 5vw, 56px);
+  line-height: 1.1; font-weight: 900;
+  margin-bottom: 16px;
+}
+.page-title em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--accent5), var(--accent2), var(--accent));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.page-sub {
+  font-size: 16px; color: var(--text2); line-height: 1.8;
+  max-width: 600px; margin: 0 auto;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== MAIN GRID ===== */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 32px;
+  align-items: start;
+}
+
+/* ===== ANALYZER CARD ===== */
+.analyzer-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  animation: fadeSlideUp 0.8s ease 0.1s both;
+  transition: all 0.3s ease;
+}
+.analyzer-card:hover { border-color: rgba(192,132,252,0.2); }
+
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px; font-weight: 700;
+  margin-bottom: 8px;
+}
+.card-sub { font-size: 14px; color: var(--text2); margin-bottom: 28px; }
+
+/* ===== INPUT TOGGLE TABS ===== */
+.input-tabs {
+  display: flex;
+  background: var(--bg3);
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.tab-btn.active {
+  background: var(--surface2);
+  color: var(--text);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* ===== FILE UPLOADER PANEL ===== */
+.input-panel { display: none; }
+.input-panel.active { display: block; }
+
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+  background: var(--bg3);
+  margin-bottom: 24px;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(192,132,252,0.05);
+  transform: scale(1.01);
+  box-shadow: 0 0 40px var(--glow);
+}
+.drop-zone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.drop-icon {
+  font-size: 52px;
+  margin-bottom: 16px;
+  display: block;
+  transition: transform 0.3s ease;
+}
+.drop-zone:hover .drop-icon { transform: scale(1.1) translateY(-4px); }
+.drop-text {
+  font-size: 16px; font-weight: 600; color: var(--text);
+  margin-bottom: 6px;
+}
+.drop-sub { font-size: 13px; color: var(--text3); }
+.drop-formats {
+  display: flex; justify-content: center; gap: 8px; margin-top: 16px; flex-wrap: wrap;
+}
+.format-tag {
+  padding: 3px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11px; color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ===== RECORDER PANEL ===== */
+.recorder-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 36px 24px;
+  text-align: center;
+  margin-bottom: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.record-btn-orb {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  border: 4px solid var(--border);
+  background: var(--bg2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  outline: none;
+}
+.record-btn-orb::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: all 0.4s ease;
+}
+.record-btn-orb:hover {
+  transform: scale(1.05);
+  border-color: var(--accent);
+  box-shadow: 0 0 30px var(--glow);
+}
+.record-btn-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--danger);
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.record-btn-orb.recording {
+  border-color: var(--danger);
+  box-shadow: 0 0 30px rgba(248,113,113,0.4);
+  animation: orbPulsate 1.5s infinite ease-in-out;
+}
+.record-btn-orb.recording .record-btn-icon {
+  border-radius: 6px;
+  transform: scale(0.7);
+  background: var(--danger);
+}
+@keyframes orbPulsate {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(248,113,113,0.4); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(248,113,113,0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(248,113,113,0); }
+}
+
+.recorder-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.recorder-status.recording { color: var(--danger); }
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text3);
+}
+.recording .status-dot {
+  background: var(--danger);
+  animation: recBlink 1s infinite alternate;
+}
+@keyframes recBlink {
+  from { opacity: 0.3; } to { opacity: 1; }
+}
+
+.recorder-timer {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+}
+
+/* ===== CANVAS WAVEFORM VISUALIZER ===== */
+.visualizer-wrap {
+  width: 100%;
+  height: 90px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+  display: none;
+}
+.visualizer-wrap.visible { display: block; }
+.visualizer-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ===== AUDIO PLAYER PANEL ===== */
+.player-area {
+  display: none;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  margin-bottom: 24px;
+  animation: fadeSlideUp 0.5s ease both;
+}
+.player-area.visible {
+  display: block;
+}
+.player-title {
+  font-size: 13px; font-family: 'JetBrains Mono', monospace;
+  color: var(--text3); text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 12px; display: flex; justify-content: space-between;
+}
+.player-clear-btn {
+  background: none; border: none; color: var(--text3); cursor: pointer; font-size: 12px;
+}
+.player-clear-btn:hover { color: var(--danger); }
+.player-row {
+  display: flex; align-items: center; gap: 16px;
+}
+.player-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--accent); color: var(--bg);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.player-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 16px var(--glow);
+}
+.player-timeline-wrap {
+  flex: 1; display: flex; flex-direction: column; gap: 6px;
+}
+.player-timeline {
+  position: relative; height: 6px; background: var(--surface2); border-radius: 3px; cursor: pointer;
+}
+.player-progress {
+  position: absolute; top:0; left:0; height:100%; background: var(--accent); border-radius: 3px; width: 0;
+}
+.player-time-row {
+  display: flex; justify-content: space-between; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text3);
+}
+
+/* ===== ACTIONS ROW ===== */
+.action-row {
+  display: flex; gap: 12px;
+}
+.btn-analyze {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 16px 28px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: white; border: none; border-radius: 50px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 4px 24px var(--glow);
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-analyze:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 40px var(--glow);
+}
+.btn-analyze:disabled {
+  opacity: 0.5; cursor: not-allowed;
+}
+.btn-analyze .btn-spinner {
+  display: none;
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.btn-analyze.loading .btn-spinner { display: block; }
+.btn-analyze.loading .btn-label { display: none; }
+
+.btn-reset {
+  padding: 16px 20px;
+  background: var(--surface2);
+  color: var(--text2); border: 1px solid var(--border);
+  border-radius: 50px;
+  font-size: 15px; cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-reset:hover { background: var(--danger); color: white; border-color: var(--danger); transform: translateY(-2px); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== RESULT AREA ===== */
+.result-area {
+  display: none;
+  margin-top: 32px;
+  border-top: 1px solid var(--border);
+  padding-top: 28px;
+  animation: fadeSlideUp 0.5s ease both;
+}
+.result-area.visible { display: block; }
+
+.result-main-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+  display: flex; gap: 20px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.result-gauge-wrap {
+  width: 90px; height: 90px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.result-gauge-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.gauge-track { fill: none; stroke: var(--bg3); stroke-width: 6; }
+.gauge-fill {
+  fill: none; stroke: var(--accent); stroke-width: 6;
+  stroke-dasharray: 251.2; stroke-dashoffset: 251.2;
+  transition: stroke-dashoffset 1s ease-out;
+  stroke-linecap: round;
+}
+.gauge-val {
+  position: absolute; font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700;
+}
+.result-info { flex: 1; }
+.result-lbl {
+  font-size: 11px; font-family: 'JetBrains Mono', monospace;
+  color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px;
+}
+.result-name-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 6px;
+}
+.result-emoji { font-size: 28px; }
+.result-primary-name {
+  font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700;
+}
+
+/* Warnings */
+.result-warning-banner {
+  background: rgba(251,146,60,0.08);
+  border: 1px solid rgba(251,146,60,0.25);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex; gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  font-size: 13px; color: var(--warn);
+  line-height: 1.5;
+}
+.warning-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+/* Parent Recommendation Panel */
+.recom-panel {
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.25);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  margin-bottom: 28px;
+  display: flex; gap: 16px;
+}
+.recom-icon { font-size: 24px; flex-shrink: 0; }
+.recom-content { flex: 1; }
+.recom-title { font-size: 14px; font-weight: 700; color: var(--accent3); margin-bottom: 6px; }
+.recom-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
+
+/* All Classes Breakdown */
+.breakdown-title {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.breakdown-title::before { content: ''; display: block; width: 12px; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+.breakdown-list { display: flex; flex-direction: column; gap: 10px; }
+.breakdown-row {
+  display: flex; align-items: center; gap: 14px;
+}
+.breakdown-lbl {
+  width: 190px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px;
+}
+.breakdown-bar-wrap {
+  flex: 1; height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden;
+}
+.breakdown-bar-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  width: 0;
+  transition: width 1s cubic-bezier(0.34,1.56,0.64,1);
+}
+.breakdown-row:first-child .breakdown-bar-fill {
+  background: linear-gradient(90deg, var(--accent2), var(--accent5));
+}
+.breakdown-val {
+  width: 50px; text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text2);
+}
+
+/* ===== SIDEBAR PANELS ===== */
+.sidebar { display: flex; flex-direction: column; gap: 24px; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+.panel:hover { background: var(--surface2); border-color: rgba(192,132,252,0.3); }
+
+.panel-title {
+  font-size: 12px; font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase; letter-spacing: 1.5px; color: var(--text3);
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-title::before { content: ''; display: block; width: 12px; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+/* Audio Guide */
+.guide-list { display: flex; flex-direction: column; gap: 12px; max-height: 350px; overflow-y: auto; padding-right: 4px; }
+.guide-item {
+  display: flex; gap: 12px; padding: 12px; background: var(--bg3); border-radius: 8px; border: 1px solid transparent; transition: all 0.3s ease;
+}
+.guide-item:hover { border-color: var(--border); background: var(--surface2); }
+.guide-emoji { font-size: 20px; margin-top: 1px; }
+.guide-info { flex: 1; }
+.guide-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.guide-desc { font-size: 11px; color: var(--text3); line-height: 1.4; }
+
+/* History Logs */
+.history-list { display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; }
+.hist-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg3); border-radius: 8px;
+  font-size: 12px;
+  border-left: 3px solid var(--accent);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.hist-item:hover { transform: translateX(4px); background: var(--surface2); }
+.hist-item.hunger { border-left-color: var(--accent5); }
+.hist-item.pain { border-left-color: var(--danger); }
+.hist-item.tiredness { border-left-color: var(--warn); }
+.hist-item.discomfort { border-left-color: var(--accent2); }
+.hist-info { flex: 1; }
+.hist-need { font-weight: 600; margin-bottom: 2px; }
+.hist-time { color: var(--text3); font-size: 10px; font-family: 'JetBrains Mono', monospace; }
+.hist-conf {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  background: var(--surface2); padding: 2px 8px; border-radius: 10px; color: var(--text2);
+}
+.hist-empty { text-align: center; padding: 20px 10px; color: var(--text3); font-size: 12px; }
+
+/* ===== PROCESSING OVERLAY ===== */
+.processing-overlay {
+  display: none;
+  position: absolute; inset: 0;
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(4px);
+  border-radius: var(--radius);
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 10;
+}
+.processing-overlay.active { display: flex; }
+.proc-orb {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(192,132,252,0.4), rgba(52,211,153,0.2), transparent);
+  border: 2px solid rgba(192,132,252,0.4);
+  animation: procSpin 2s linear infinite;
+  margin-bottom: 20px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.proc-orb::after {
+  content: '🔊';
+  font-size: 26px;
+  animation: pulseIcon 1.5s ease infinite;
+}
+@keyframes procSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes pulseIcon { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+.proc-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; color: var(--accent);
+  letter-spacing: 1px;
+}
+.proc-sub { font-size: 12px; color: var(--text3); margin-top: 6px; }
+
+/* ===== TOAST ===== */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px; z-index: 2000;
+  display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+}
+.toast {
+  padding: 12px 20px; border-radius: 12px;
+  background: var(--bg2); border: 1px solid var(--border);
+  font-size: 13px; max-width: 280px;
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(12px);
+  animation: toastIn 0.4s ease, toastOut 0.4s ease 2.6s both;
+  pointer-events: all;
+}
+.toast.success { border-color: rgba(52,211,153,0.4); }
+.toast.warn { border-color: rgba(251,146,60,0.4); }
+.toast.error { border-color: rgba(248,113,113,0.4); }
+@keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(20px); } }
+
+/* ===== FOOTER ===== */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 40px;
+  text-align: center; color: var(--text3);
+  font-size: 13px; position: relative; z-index: 1;
+  margin-top: 60px;
+}
+footer span { color: var(--accent); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  main { padding-left: 20px; padding-right: 20px; }
+  .main-grid { grid-template-columns: 1fr; }
+  .navbar { padding: 0 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="ambient amb1"></div>
+<div class="ambient amb2"></div>
+<div class="ambient amb3"></div>
+
+<!-- ===== NAVBAR ===== -->
+<header class="navbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <img src="assets/logo.png" alt="Matri Sathi Logo">
+    </div>
+    <div>
+      <span class="logo-text">MatriSathi</span>
+      <span class="logo-sub">Cry Analyzer</span>
+    </div>
+  </div>
+  <div class="nav-right">
+    <!-- Theme Toggle -->
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle Theme" id="theme-toggle">
+      <div class="theme-track">
+        <div class="theme-thumb">🌙</div>
+      </div>
+    </button>
+  </div>
+</header>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main>
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="page-badge">
+      <span class="page-badge-dot"></span>
+      ACOUSTIC DIAGNOSTICS ACTIVE
+    </div>
+    <h1 class="page-title">Infant Cry <em>Acoustic Analyzer</em></h1>
+    <p class="page-sub">Upload crying audio clips or capture them directly using your microphone. Our neural network processes the audio properties locally to predict primary infant needs.</p>
+  </header>
+
+  <!-- Main Grid -->
+  <div class="main-grid">
+    <!-- Left Column: Analyzer Card -->
+    <div style="position: relative;">
+      <div class="analyzer-card" id="analyzerCard">
+        <!-- Processing Overlay -->
+        <div class="processing-overlay" id="processingOverlay">
+          <div class="proc-orb"></div>
+          <div class="proc-text">ANALYZING AUDIO...</div>
+          <div class="proc-sub">Computing Mel-spectrogram & Running Keras Model</div>
+        </div>
+
+        <h2 class="card-title">Select Audio Input</h2>
+        <p class="card-sub">Provide a high-quality audio clip (at least 2 seconds recommended for optimal analysis).</p>
+
+        <!-- Toggle Tabs -->
+        <div class="input-tabs">
+          <button class="tab-btn active" id="tabUploadBtn">
+            📂 Upload Audio File
+          </button>
+          <button class="tab-btn" id="tabRecordBtn">
+            🎙️ Record Microphone
+          </button>
+        </div>
+
+        <!-- Panel 1: File Uploader -->
+        <div class="input-panel active" id="panelUpload">
+          <div class="drop-zone" id="dropZone">
+            <span class="drop-icon">🎵</span>
+            <span class="drop-text">Drag & drop baby cry audio here</span>
+            <span class="drop-sub">or click to browse your local files</span>
+            <input type="file" id="audioFileInput" accept="audio/*">
+            <div class="drop-formats">
+              <span class="format-tag">.WAV</span>
+              <span class="format-tag">.MP3</span>
+              <span class="format-tag">.M4A</span>
+              <span class="format-tag">.OGG</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel 2: Microphone Recorder -->
+        <div class="input-panel" id="panelRecord">
+          <div class="recorder-box">
+            <div class="recorder-status" id="recorderStatus">
+              <span class="status-dot"></span>
+              <span id="statusText">READY TO RECORD</span>
+            </div>
+            <div class="recorder-timer" id="recordTimer">00:00</div>
+            <button class="record-btn-orb" id="recordBtnOrb" aria-label="Record Microphone">
+              <div class="record-btn-icon" id="recordBtnIcon"></div>
+            </button>
+            <p class="card-sub" style="margin-bottom:0">Click the microphone to start/stop recording</p>
+          </div>
+        </div>
+
+        <!-- Live Waveform Visualizer -->
+        <div class="visualizer-wrap" id="visualizerWrap">
+          <canvas class="visualizer-canvas" id="waveformCanvas"></canvas>
+        </div>
+
+        <!-- Custom Audio Playback Player -->
+        <div class="player-area" id="playerArea">
+          <div class="player-title">
+            <span>SELECTED AUDIO PLAYBACK</span>
+            <button class="player-clear-btn" id="playerClearBtn" title="Remove Audio">✕ Clear</button>
+          </div>
+          <div class="player-row">
+            <button class="player-btn" id="playerPlayBtn" aria-label="Play Audio">▶</button>
+            <div class="player-timeline-wrap">
+              <div class="player-timeline" id="playerTimeline">
+                <div class="player-progress" id="playerProgress"></div>
+              </div>
+              <div class="player-time-row">
+                <span id="playerCurrentTime">0:00</span>
+                <span id="playerDuration">0:00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-row">
+          <button class="btn-analyze" id="btnAnalyze" disabled>
+            <div class="btn-spinner"></div>
+            <span class="btn-label">✨ Start AI Cry Analysis</span>
+          </button>
+          <button class="btn-reset" id="btnReset" style="display:none">Reset</button>
+        </div>
+
+        <!-- Results Display Area -->
+        <div class="result-area" id="resultArea">
+          <h3 class="card-title" style="font-size:20px; margin-bottom:16px">Analysis Outcome</h3>
+          
+          <!-- Warning/Simulation Banner -->
+          <div class="result-warning-banner" id="warningBanner" style="display:none">
+            <span class="warning-icon">⚠️</span>
+            <span id="warningText">Running in simulation mode.</span>
+          </div>
+
+          <!-- Primary Result Card -->
+          <div class="result-main-card">
+            <div class="result-gauge-wrap">
+              <svg class="result-gauge-svg">
+                <circle class="gauge-track" cx="45" cy="45" r="40"></circle>
+                <circle class="gauge-fill" id="resultGaugeFill" cx="45" cy="45" r="40"></circle>
+              </svg>
+              <div class="gauge-val" id="resultConfidenceText">0%</div>
+            </div>
+            <div class="result-info">
+              <div class="result-lbl">PRIMARY NEED IDENTIFIED</div>
+              <div class="result-name-row">
+                <span class="result-emoji" id="resultEmoji">🍼</span>
+                <span class="result-primary-name" id="resultPrimaryName">Hunger</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic recommendation box -->
+          <div class="recom-panel" id="recommendationPanel">
+            <span class="recom-icon" id="recomIcon">💡</span>
+            <div class="recom-content">
+              <div class="recom-title">RECOMMENDED ACTION</div>
+              <p class="recom-text" id="recomText">Infant is likely crying due to hunger. Feeding is advised.</p>
+            </div>
+          </div>
+
+          <!-- All Categories Multi-bar Breakdown -->
+          <div class="breakdown-title">Need Probability Breakdown</div>
+          <div class="breakdown-list" id="breakdownList">
+            <!-- Populated via Javascript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Sidebar Panels -->
+    <div class="sidebar">
+      <!-- Need Diagnostic Guide -->
+      <div class="panel">
+        <h3 class="panel-title">Diagnostic Guide</h3>
+        <div class="guide-list">
+          <div class="guide-item">
+            <span class="guide-emoji">🍼</span>
+            <div class="guide-info">
+              <div class="guide-name">Hunger</div>
+              <div class="guide-desc">Rhythmic, repetitive crying, often paired with sucking sounds or hand-to-mouth motions.</div>
+            </div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-emoji">🫄</span>
+            <div class="guide-info">
+              <div class="guide-name">Pain / Colic</div>
+              <div class="guide-desc">Sudden, intense, high-pitched shrieks. Baby may draw legs up or arch their back.</div>
+            </div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-emoji">😴</span>
+            <div class="guide-info">
+              <div class="guide-name">Tiredness</div>
+              <div class="guide-desc">Whiny, nasal cry, gradually building. Accompanied by eye rubbing or yawning.</div>
+            </div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-emoji">🧷</span>
+            <div class="guide-info">
+              <div class="guide-name">Discomfort / Wet Diaper</div>
+              <div class="guide-desc">Fussy, grumbly cry. Usually caused by a wet/soiled diaper or uncomfortable clothing.</div>
+            </div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-emoji">💨</span>
+            <div class="guide-info">
+              <div class="guide-name">Gas / Needs Burping</div>
+              <div class="guide-desc">Flatulence or bloating. Accompanied by grunting, squirming, or release of air bubbles.</div>
+            </div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-emoji">🧸</span>
+            <div class="guide-info">
+              <div class="guide-name">Boredom / Seeking Attention</div>
+              <div class="guide-desc">Monotone, calling cry. Stops when picked up, cuddled, or engaged with a toy.</div>
+            </div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-emoji">🙀</span>
+            <div class="guide-info">
+              <div class="guide-name">Fear / Startled</div>
+              <div class="guide-desc">Sudden screaming outburst following loud noises, bright lights, or sudden movements.</div>
+            </div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-emoji">🌡️</span>
+            <div class="guide-info">
+              <div class="guide-name">Temperature (Too Hot/Cold)</div>
+              <div class="guide-desc">Shivering whimpers (if cold) or sweaty, flushed fussiness (if too hot).</div>
+            </div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-emoji">🤒</span>
+            <div class="guide-info">
+              <div class="guide-name">Sickness / Fever</div>
+              <div class="guide-desc">Weak, hoarse, low-energy crying. Persistent distress that is difficult to soothe.</div>
+            </div>
+          </div>
+          <div class="guide-item">
+            <span class="guide-emoji">⚡</span>
+            <div class="guide-info">
+              <div class="guide-name">Frustration / Overstimulation</div>
+              <div class="guide-desc">Frustrated screeching. Baby turning away from sights/sounds. Needs calm space.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Log Diary -->
+      <div class="panel">
+        <h3 class="panel-title">History Diary</h3>
+        <div class="history-list" id="historyList">
+          <div class="hist-empty" id="historyEmpty">No past analyses logged yet. Completed reports will be recorded here.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <p>© 2026 <span>MatriSathi</span> · Automated Child Safety Systems. Served locally.</p>
+</footer>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Audio elements for recording and playback -->
+<audio id="audioPlayback" style="display:none"></audio>
+
+<script>
+// ===== APP GLOBAL STATE =====
+let currentAudioBlob = null;
+let currentAudioUrl = null;
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordTimerInterval = null;
+let recordDurationSec = 0;
+let isPlaying = false;
+let audioContext = null;
+let audioSourceNode = null;
+let analyserNode = null;
+let visualizerAnimationFrame = null;
+
+// Need emoji mapping helper
+const needDetails = {
+  "Hunger": { emoji: "🍼", desc: "Baby is crying for feeding. Recommended action: Breastfeed or prepare a bottle of formula." },
+  "Pain / Colic": { emoji: "🫄", desc: "Indicates sharp pain or digestive discomfort. Recommended action: Check for gas, massage tummy gently, or consult a pediatrician if persistent." },
+  "Tiredness": { emoji: "😴", desc: "Infant is sleepy and over-exhausted. Recommended action: Place in a quiet, dark sleeping area, use swaddling, or play soft white noise." },
+  "Discomfort / Wet Diaper": { emoji: "🧷", desc: "Baby is uncomfortable. Recommended action: Check diaper cleanliness, clothing tightness, or room temperature." },
+  "Gas / Needs Burping": { emoji: "💨", desc: "Air bubbles trapped in tummy. Recommended action: Hold baby upright against your shoulder and gently pat their back to release gas." },
+  "Boredom / Seeking Attention": { emoji: "🧸", desc: "Baby wants engagement. Recommended action: Pick up, talk softly, make eye contact, or offer a soothing toy." },
+  "Fear / Startled": { emoji: "🙀", desc: "Scared by sudden noise or environment. Recommended action: Hold close, swaddle, speak in a gentle low voice to soothe." },
+  "Temperature (Too Hot/Cold)": { emoji: "🌡️", desc: "Room or body temperature is uncomfortable. Recommended action: Add or remove layers of clothing, check room thermostat." },
+  "Sickness / Fever": { emoji: "🤒", desc: "Acoustics suggest physical illness. Recommended action: Use a thermometer to check for fever, monitor symptoms, and contact a doctor." },
+  "Frustration / Overstimulation": { emoji: "⚡", desc: "Too much activity or noise around. Recommended action: Move baby to a calm, dim, and quiet space to wind down." }
+};
+
+// UI DOM References
+const themeBtn = document.getElementById('themeBtn');
+const themeThumb = themeBtn.querySelector('.theme-thumb');
+const tabUploadBtn = document.getElementById('tabUploadBtn');
+const tabRecordBtn = document.getElementById('tabRecordBtn');
+const panelUpload = document.getElementById('panelUpload');
+const panelRecord = document.getElementById('panelRecord');
+const dropZone = document.getElementById('dropZone');
+const audioFileInput = document.getElementById('audioFileInput');
+const recordBtnOrb = document.getElementById('recordBtnOrb');
+const recorderStatus = document.getElementById('recorderStatus');
+const statusText = document.getElementById('statusText');
+const recordTimer = document.getElementById('recordTimer');
+const visualizerWrap = document.getElementById('visualizerWrap');
+const waveformCanvas = document.getElementById('waveformCanvas');
+const playerArea = document.getElementById('playerArea');
+const playerPlayBtn = document.getElementById('playerPlayBtn');
+const playerTimeline = document.getElementById('playerTimeline');
+const playerProgress = document.getElementById('playerProgress');
+const playerCurrentTime = document.getElementById('playerCurrentTime');
+const playerDuration = document.getElementById('playerDuration');
+const playerClearBtn = document.getElementById('playerClearBtn');
+const btnAnalyze = document.getElementById('btnAnalyze');
+const btnReset = document.getElementById('btnReset');
+const audioPlayback = document.getElementById('audioPlayback');
+const processingOverlay = document.getElementById('processingOverlay');
+const resultArea = document.getElementById('resultArea');
+const warningBanner = document.getElementById('warningBanner');
+const warningText = document.getElementById('warningText');
+const resultGaugeFill = document.getElementById('resultGaugeFill');
+const resultConfidenceText = document.getElementById('resultConfidenceText');
+const resultEmoji = document.getElementById('resultEmoji');
+const resultPrimaryName = document.getElementById('resultPrimaryName');
+const recommendationPanel = document.getElementById('recommendationPanel');
+const recomIcon = document.getElementById('recomIcon');
+const recomText = document.getElementById('recomText');
+const breakdownList = document.getElementById('breakdownList');
+const historyList = document.getElementById('historyList');
+const historyEmpty = document.getElementById('historyEmpty');
+
+// ===== INITIALIZATION & LOCAL STORAGE =====
+document.addEventListener('DOMContentLoaded', () => {
+  // Synchronize theme button display
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  themeThumb.textContent = currentTheme === 'light' ? '☀️' : '🌙';
+  
+  // Load past history
+  renderHistory();
+});
+
+// ===== THEME TOGGLE =====
+themeBtn.addEventListener('click', () => {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  themeThumb.textContent = newTheme === 'light' ? '☀️' : '🌙';
+  showToast(`Switched to ${newTheme} mode`, 'success');
+});
+
+// ===== TABS CONTROLLER =====
+tabUploadBtn.addEventListener('click', () => {
+  setActiveTab(tabUploadBtn, panelUpload);
+  stopRecording();
+});
+tabRecordBtn.addEventListener('click', () => {
+  setActiveTab(tabRecordBtn, panelRecord);
+});
+
+function setActiveTab(activeTab, activePanel) {
+  [tabUploadBtn, tabRecordBtn].forEach(b => b.classList.remove('active'));
+  [panelUpload, panelRecord].forEach(p => p.classList.remove('active'));
+  
+  activeTab.classList.add('active');
+  activePanel.classList.add('active');
+}
+
+// ===== FILE UPLOADER LOGIC =====
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropZone.classList.add('drag-over');
+});
+dropZone.addEventListener('dragleave', () => {
+  dropZone.classList.remove('drag-over');
+});
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const files = e.dataTransfer.files;
+  if (files.length > 0 && files[0].type.startsWith('audio/')) {
+    setAudioSource(files[0]);
+  } else {
+    showToast('Invalid file type. Please upload audio only.', 'error');
+  }
+});
+audioFileInput.addEventListener('change', () => {
+  if (audioFileInput.files.length > 0) {
+    setAudioSource(audioFileInput.files[0]);
+  }
+});
+
+// ===== RECORDING LOGIC =====
+recordBtnOrb.addEventListener('click', async () => {
+  // Initialize Web Audio Context on user gesture
+  initAudioContext();
+  
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    stopRecording();
+  } else {
+    await startRecording();
+  }
+});
+
+async function startRecording() {
+  recordedChunks = [];
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    
+    // Setup Web Audio nodes for visualization
+    const sourceNode = audioContext.createMediaStreamSource(stream);
+    analyserNode = audioContext.createAnalyser();
+    analyserNode.fftSize = 256;
+    sourceNode.connect(analyserNode);
+    
+    visualizerWrap.classList.add('visible');
+    drawWaveform();
+    
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) {
+        recordedChunks.push(e.data);
+      }
+    };
+    
+    mediaRecorder.onstop = () => {
+      const audioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+      setAudioSource(audioBlob, 'Microphone_Record.wav');
+      // Clean up stream tracks
+      stream.getTracks().forEach(track => track.stop());
+      cancelAnimationFrame(visualizerAnimationFrame);
+      visualizerWrap.classList.remove('visible');
+    };
+    
+    mediaRecorder.start();
+    
+    // UI state recording
+    recordBtnOrb.classList.add('recording');
+    recorderStatus.classList.add('recording');
+    statusText.textContent = 'RECORDING LIVE AUDIO';
+    showToast('Recording started...', 'success');
+    
+    // Timer
+    recordDurationSec = 0;
+    recordTimer.textContent = '00:00';
+    recordTimerInterval = setInterval(() => {
+      recordDurationSec++;
+      const mins = String(Math.floor(recordDurationSec / 60)).padStart(2, '0');
+      const secs = String(recordDurationSec % 60).padStart(2, '0');
+      recordTimer.textContent = `${mins}:${secs}`;
+    }, 1000);
+    
+  } catch (err) {
+    console.error('Mic access error:', err);
+    showToast('Could not access microphone. Ensure permissions are granted.', 'error');
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    clearInterval(recordTimerInterval);
+    
+    recordBtnOrb.classList.remove('recording');
+    recorderStatus.classList.remove('recording');
+    statusText.textContent = 'READY TO RECORD';
+    recordTimer.textContent = '00:00';
+    showToast('Recording stopped.', 'success');
+  }
+}
+
+// ===== AUDIO SETTINGS UTILITIES =====
+function setAudioSource(blobOrFile, filename = null) {
+  // Stop existing playback
+  stopPlayback();
+  
+  // Set current audio files
+  currentAudioBlob = blobOrFile;
+  const name = filename || blobOrFile.name || 'Uploaded_Audio_File';
+  
+  if (currentAudioUrl) {
+    URL.revokeObjectURL(currentAudioUrl);
+  }
+  
+  currentAudioUrl = URL.createObjectURL(currentAudioBlob);
+  audioPlayback.src = currentAudioUrl;
+  
+  // Update Player UI
+  playerArea.classList.add('visible');
+  playerProgress.style.width = '0%';
+  playerCurrentTime.textContent = '0:00';
+  
+  // Get duration
+  audioPlayback.addEventListener('loadedmetadata', onAudioLoadedMetadata);
+  
+  btnAnalyze.disabled = false;
+  btnReset.style.display = 'inline-block';
+  
+  showToast(`Loaded: ${name}`, 'success');
+}
+
+function onAudioLoadedMetadata() {
+  const duration = audioPlayback.duration;
+  if (!isNaN(duration)) {
+    const mins = Math.floor(duration / 60);
+    const secs = String(Math.floor(duration % 60)).padStart(2, '0');
+    playerDuration.textContent = `${mins}:${secs}`;
+  }
+}
+
+// Remove current audio
+playerClearBtn.addEventListener('click', clearLoadedAudio);
+btnReset.addEventListener('click', clearLoadedAudio);
+
+function clearLoadedAudio() {
+  stopPlayback();
+  currentAudioBlob = null;
+  if (currentAudioUrl) {
+    URL.revokeObjectURL(currentAudioUrl);
+    currentAudioUrl = null;
+  }
+  audioPlayback.src = '';
+  audioFileInput.value = '';
+  
+  playerArea.classList.remove('visible');
+  resultArea.classList.remove('visible');
+  btnAnalyze.disabled = true;
+  btnReset.style.display = 'none';
+  showToast('Audio cleared.', 'info');
+}
+
+// ===== CUSTOM PLAYER LOGIC =====
+playerPlayBtn.addEventListener('click', () => {
+  initAudioContext();
+  
+  if (isPlaying) {
+    pausePlayback();
+  } else {
+    startPlayback();
+  }
+});
+
+function startPlayback() {
+  audioPlayback.play();
+  isPlaying = true;
+  playerPlayBtn.textContent = '⏸';
+  
+  // Setup real-time audio visualization during playback if possible
+  visualizerWrap.classList.add('visible');
+  setupPlaybackVisualizer();
+  
+  // Update timeline
+  audioPlayback.addEventListener('timeupdate', updateTimeline);
+  audioPlayback.addEventListener('ended', onPlaybackEnded);
+}
+
+function pausePlayback() {
+  audioPlayback.pause();
+  isPlaying = false;
+  playerPlayBtn.textContent = '▶';
+  cancelAnimationFrame(visualizerAnimationFrame);
+  visualizerWrap.classList.remove('visible');
+}
+
+function stopPlayback() {
+  pausePlayback();
+  audioPlayback.currentTime = 0;
+  playerProgress.style.width = '0%';
+}
+
+function onPlaybackEnded() {
+  isPlaying = false;
+  playerPlayBtn.textContent = '▶';
+  playerProgress.style.width = '100%';
+  cancelAnimationFrame(visualizerAnimationFrame);
+  visualizerWrap.classList.remove('visible');
+}
+
+function updateTimeline() {
+  const duration = audioPlayback.duration;
+  const currentTime = audioPlayback.currentTime;
+  if (!isNaN(duration) && duration > 0) {
+    const pct = (currentTime / duration) * 100;
+    playerProgress.style.width = `${pct}%`;
+    
+    const mins = Math.floor(currentTime / 60);
+    const secs = String(Math.floor(currentTime % 60)).padStart(2, '0');
+    playerCurrentTime.textContent = `${mins}:${secs}`;
+  }
+}
+
+playerTimeline.addEventListener('click', (e) => {
+  const duration = audioPlayback.duration;
+  if (!isNaN(duration) && duration > 0) {
+    const rect = playerTimeline.getBoundingClientRect();
+    const pos = (e.clientX - rect.left) / rect.width;
+    audioPlayback.currentTime = pos * duration;
+  }
+});
+
+// ===== WEB AUDIO VISUALIZATION =====
+function initAudioContext() {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+}
+
+function setupPlaybackVisualizer() {
+  if (!audioContext) return;
+  
+  try {
+    // Only construct element source once
+    if (!audioSourceNode) {
+      audioSourceNode = audioContext.createMediaElementSource(audioPlayback);
+      analyserNode = audioContext.createAnalyser();
+      analyserNode.fftSize = 256;
+      audioSourceNode.connect(analyserNode);
+      analyserNode.connect(audioContext.destination);
+    }
+    
+    drawWaveform();
+  } catch (err) {
+    // If element source is already connected, just run visualizer loop
+    drawWaveform();
+  }
+}
+
+function drawWaveform() {
+  const canvasCtx = waveformCanvas.getContext('2d');
+  const width = waveformCanvas.width = waveformCanvas.offsetWidth;
+  const height = waveformCanvas.height = waveformCanvas.offsetHeight;
+  
+  const bufferLength = analyserNode.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  
+  function draw() {
+    visualizerAnimationFrame = requestAnimationFrame(draw);
+    analyserNode.getByteTimeDomainData(dataArray);
+    
+    // Custom gradient styling
+    const theme = document.documentElement.getAttribute('data-theme');
+    canvasCtx.fillStyle = theme === 'light' ? '#f2eeff' : '#0f0f1a';
+    canvasCtx.fillRect(0, 0, width, height);
+    
+    canvasCtx.lineWidth = 3;
+    const strokeGrad = canvasCtx.createLinearGradient(0, 0, width, 0);
+    strokeGrad.addColorStop(0, '#818cf8');
+    strokeGrad.addColorStop(0.5, '#c084fc');
+    strokeGrad.addColorStop(1, '#f472b6');
+    canvasCtx.strokeStyle = strokeGrad;
+    canvasCtx.beginPath();
+    
+    const sliceWidth = width * 1.0 / bufferLength;
+    let x = 0;
+    
+    for (let i = 0; i < bufferLength; i++) {
+      const v = dataArray[i] / 128.0;
+      const y = v * height / 2;
+      
+      if (i === 0) {
+        canvasCtx.moveTo(x, y);
+      } else {
+        canvasCtx.lineTo(x, y);
+      }
+      
+      x += sliceWidth;
+    }
+    
+    canvasCtx.lineTo(width, height / 2);
+    canvasCtx.stroke();
+  }
+  
+  draw();
+}
+
+// ===== API INFERENCE INTEGRATION =====
+btnAnalyze.addEventListener('click', async () => {
+  if (!currentAudioBlob) return;
+  
+  // Pause playback if active
+  pausePlayback();
+  
+  btnAnalyze.disabled = true;
+  btnReset.disabled = true;
+  processingOverlay.classList.add('active');
+  
+  const formData = new FormData();
+  // Ensure we specify file parameter matching backend 'file' field
+  formData.append('file', currentAudioBlob, 'input_cry_audio.wav');
+  
+  try {
+    const response = await fetch('/api/predict_cry', {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Server returned HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    if (data.success) {
+      displayResults(data);
+      saveToHistory(data);
+      showToast('Cry analysis complete!', 'success');
+    } else {
+      throw new Error(data.error || 'Prediction process failed');
+    }
+  } catch (err) {
+    console.error('Analysis error:', err);
+    showToast(`Inference Error: ${err.message}`, 'error');
+  } finally {
+    btnAnalyze.disabled = false;
+    btnReset.disabled = false;
+    processingOverlay.classList.remove('active');
+  }
+});
+
+// ===== RESULTS & GRAPH RENDERING =====
+function displayResults(data) {
+  resultArea.classList.add('visible');
+  
+  // Handle simulated warning banner
+  if (data.is_simulated) {
+    warningBanner.style.display = 'flex';
+    warningText.textContent = data.warning || 'Running in simulation mode.';
+  } else {
+    warningBanner.style.display = 'none';
+  }
+  
+  const primary = data.primary;
+  const primaryConfPct = Math.round(primary.confidence * 100);
+  
+  // 1. Primary Gauge animation
+  resultConfidenceText.textContent = `${primaryConfPct}%`;
+  // SVG stroke-dashoffset: length is 2*pi*r = 2*3.1415*40 = 251.2
+  const strokeOffset = 251.2 - (251.2 * primary.confidence);
+  resultGaugeFill.style.strokeDashoffset = strokeOffset;
+  
+  // Set colored rings based on need severity (Pain -> Red, Hunger -> Pink, Sleepy -> Orange)
+  if (primary.label.includes("Pain")) {
+    resultGaugeFill.style.stroke = "var(--danger)";
+  } else if (primary.label.includes("Hunger")) {
+    resultGaugeFill.style.stroke = "var(--accent5)";
+  } else {
+    resultGaugeFill.style.stroke = "var(--accent)";
+  }
+  
+  // 2. Info mapping
+  const detail = needDetails[primary.label] || { emoji: "🔊", desc: "Acoustic need classification complete." };
+  resultEmoji.textContent = detail.emoji;
+  resultPrimaryName.textContent = primary.label;
+  
+  // 3. Recommendation details
+  recomIcon.textContent = detail.emoji;
+  recomText.textContent = detail.desc;
+  
+  // 4. Probability breakdown list
+  breakdownList.innerHTML = '';
+  data.predictions.forEach(p => {
+    const pPct = Math.round(p.confidence * 100);
+    const pDetail = needDetails[p.label] || { emoji: "🔊" };
+    
+    const row = document.createElement('div');
+    row.className = 'breakdown-row';
+    row.innerHTML = `
+      <div class="breakdown-lbl">
+        <span>${pDetail.emoji}</span>
+        <span>${p.label}</span>
+      </div>
+      <div class="breakdown-bar-wrap">
+        <div class="breakdown-bar-fill" style="width: 0%"></div>
+      </div>
+      <div class="breakdown-val">${pPct}%</div>
+    `;
+    
+    breakdownList.appendChild(row);
+    
+    // Trigger bar fill animation
+    setTimeout(() => {
+      row.querySelector('.breakdown-bar-fill').style.width = `${pPct}%`;
+    }, 50);
+  });
+  
+  // Scroll to results cleanly
+  setTimeout(() => {
+    resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+}
+
+// ===== HISTORY MANAGEMENT =====
+function saveToHistory(data) {
+  const primary = data.primary;
+  const date = new Date();
+  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - ' + date.toLocaleDateString();
+  
+  const historyItem = {
+    need: primary.label,
+    confidence: Math.round(primary.confidence * 100),
+    time: timeStr
+  };
+  
+  let history = JSON.parse(localStorage.getItem('cry_history') || '[]');
+  history.unshift(historyItem);
+  
+  // Cap at 15 items
+  if (history.length > 15) {
+    history.pop();
+  }
+  
+  localStorage.setItem('cry_history', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem('cry_history') || '[]');
+  
+  if (history.length === 0) {
+    historyEmpty.style.display = 'block';
+    // Remove past nodes
+    const items = historyList.querySelectorAll('.hist-item');
+    items.forEach(el => el.remove());
+    return;
+  }
+  
+  historyEmpty.style.display = 'none';
+  
+  // Clear old list items
+  const items = historyList.querySelectorAll('.hist-item');
+  items.forEach(el => el.remove());
+  
+  history.forEach(item => {
+    const detail = needDetails[item.need] || { emoji: "🔊" };
+    const cssClass = item.need.toLowerCase().replace(/[^a-z]/g, '');
+    
+    const div = document.createElement('div');
+    div.className = `hist-item ${cssClass}`;
+    div.innerHTML = `
+      <span style="font-size: 16px">${detail.emoji}</span>
+      <div class="hist-info">
+        <div class="hist-need">${item.need}</div>
+        <div class="hist-time">${item.time}</div>
+      </div>
+      <div class="hist-conf">${item.confidence}%</div>
+    `;
+    
+    historyList.appendChild(div);
+  });
+}
+
+// ===== TOAST UTILITY =====
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  
+  // Auto remove toast
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
+}
+</script>
+</body>
+</html>
