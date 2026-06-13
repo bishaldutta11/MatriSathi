@@ -11,6 +11,9 @@ from fastapi.staticfiles import StaticFiles
 from ultralytics import YOLO
 import os
 
+# Set Keras backend to PyTorch to avoid requiring a huge TensorFlow installation
+os.environ["KERAS_BACKEND"] = "torch"
+
 # ---------------- CONFIGURATION ----------------
 PORT = 8000
 HOST = "0.0.0.0"
