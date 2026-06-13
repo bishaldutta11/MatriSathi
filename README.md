@@ -499,7 +499,7 @@ To tune sensitivity:
 | 👤 | **Ritam** | Systems & Architecture |
 | 👤 | **Subhodeep** | Privacy & Security |
 
-*Built with ❤️ for every parent . Presented at **IEDC Summit 2025!!**.*
+*Built with ❤️ for every parent . Presented at **IEDC Summit 2025**.*
 
 </div>
 
