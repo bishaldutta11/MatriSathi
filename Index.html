@@ -1025,9 +1025,172 @@ footer span { color: var(--accent); }
   transition: all 0.3s ease;
 }
 .conn-btn-reset:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
+/* ===== SPLASH SCREEN ===== */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: clip-path 1.2s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.8s ease;
+  clip-path: circle(150% at 50% 50%);
+}
+.splash-screen.fade-out {
+  clip-path: circle(0% at 50% 50%);
+  opacity: 0;
+  pointer-events: none;
+}
+#splashCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.splash-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 450px;
+  padding: 20px;
+  text-align: center;
+}
+.splash-logo-container {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.splash-logo {
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: splashPulse 3s ease-in-out infinite;
+}
+.splash-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 16px var(--glow));
+}
+.splash-ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(192, 132, 252, 0.25);
+  border-radius: 50%;
+  animation: spinRing 8s linear infinite;
+}
+.splash-ring::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 12px var(--accent);
+}
+.splash-ring-inner {
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed rgba(129, 140, 248, 0.2);
+  border-radius: 50%;
+  animation: spinRing 12s linear infinite reverse;
+}
+@keyframes spinRing {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes splashPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 16px var(--glow)); }
+  50% { transform: scale(1.05); filter: drop-shadow(0 0 28px var(--accent)); }
+}
+.splash-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, var(--text), var(--text2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: trackingIn 1.5s ease both;
+}
+.splash-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  margin-bottom: 30px;
+  opacity: 0.85;
+  animation: trackingIn 1.5s ease both 0.3s;
+}
+@keyframes trackingIn {
+  from { opacity: 0; letter-spacing: -4px; transform: scale(0.95); filter: blur(4px); }
+  to { opacity: 1; letter-spacing: 4px; transform: scale(1); filter: blur(0); }
+}
+
+/* Loader bar */
+.splash-loader-wrap {
+  width: 100%;
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  position: relative;
+}
+.splash-loader-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+  border-radius: 2px;
+  box-shadow: 0 0 10px var(--glow);
+  transition: width 0.1s linear;
+}
+.splash-loader-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text3);
+}
 </style>
 </head>
 <body>
+
+<!-- Unique Splash Screen Overlay -->
+<div id="splashScreen" class="splash-screen">
+  <canvas id="splashCanvas"></canvas>
+  <div class="splash-content">
+    <div class="splash-logo-container">
+      <div class="splash-ring"></div>
+      <div class="splash-ring-inner"></div>
+      <div class="splash-logo">
+        <img src="assets/logo.png" alt="Matri Sathi Logo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px; box-shadow: 0 0 25px var(--glow);">
+      </div>
+    </div>
+    <h1 class="splash-title">MATRI SATHI</h1>
+    <p class="splash-subtitle">GUARDIAN EYES, ALWAYS AWAKE</p>
+    
+    <div class="splash-loader-wrap">
+      <div class="splash-loader-bar" id="splashLoaderBar"></div>
+    </div>
+    <div class="splash-loader-text" id="splashLoaderPercent">0%</div>
+  </div>
+</div>
 
 <!-- Ambient Background -->
 <div class="ambient amb1"></div>
@@ -1276,7 +1439,7 @@ footer span { color: var(--accent); }
       <div class="live-grid">
         <div class="feed-frame" style="position: relative;">
           <img id="videoFeed" src=""
-            style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0;"
+            style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; display:none;"
             onload="onFeedLoad()"
             onerror="onFeedError()">
           <div class="feed-overlay"></div>
@@ -1528,6 +1691,156 @@ footer span { color: var(--accent); }
 </footer>
 
 <script>
+// ===== UNIQUE INTERACTIVE SPLASH SCREEN LOGIC =====
+(function initSplashScreen() {
+  const splash = document.getElementById('splashScreen');
+  const canvas = document.getElementById('splashCanvas');
+  const bar = document.getElementById('splashLoaderBar');
+  const percentText = document.getElementById('splashLoaderPercent');
+  
+  if (!splash) return;
+
+  // Prevent scrolling during splash
+  document.body.style.overflow = 'hidden';
+
+  // 1. Interactive Canvas Particle System
+  const ctx = canvas.getContext('2d');
+  let width = (canvas.width = window.innerWidth);
+  let height = (canvas.height = window.innerHeight);
+
+  window.addEventListener('resize', () => {
+    width = (canvas.width = window.innerWidth);
+    height = (canvas.height = window.innerHeight);
+  });
+
+  const particles = [];
+  const mouse = { x: null, y: null, radius: 120 };
+
+  window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  window.addEventListener('mouseout', () => {
+    mouse.x = null;
+    mouse.y = null;
+  });
+
+  // Check data-theme for particle colors
+  const isLightTheme = document.documentElement.getAttribute('data-theme') === 'light';
+  const particleColor = isLightTheme ? 'rgba(124, 58, 237, 0.15)' : 'rgba(192, 132, 252, 0.2)';
+
+  class Particle {
+    constructor() {
+      this.x = Math.random() * width;
+      this.y = height + Math.random() * 100;
+      this.size = Math.random() * 5 + 2;
+      this.speedY = -(Math.random() * 1.5 + 0.5);
+      this.speedX = Math.random() * 1 - 0.5;
+      this.alpha = Math.random() * 0.5 + 0.3;
+    }
+    update() {
+      this.y += this.speedY;
+      this.x += this.speedX;
+
+      // Wrap around screen top/sides
+      if (this.y < -10) {
+        this.y = height + Math.random() * 50;
+        this.x = Math.random() * width;
+      }
+      if (this.x < -10 || this.x > width + 10) {
+        this.x = Math.random() * width;
+      }
+
+      // Mouse interactive push effect (magnetic repulsion)
+      if (mouse.x !== null && mouse.y !== null) {
+        const dx = this.x - mouse.x;
+        const dy = this.y - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < mouse.radius) {
+          const force = (mouse.radius - dist) / mouse.radius;
+          const angle = Math.atan2(dy, dx);
+          this.x += Math.cos(angle) * force * 5;
+          this.y += Math.sin(angle) * force * 5;
+        }
+      }
+    }
+    draw() {
+      ctx.save();
+      ctx.globalAlpha = this.alpha;
+      ctx.fillStyle = particleColor;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = isLightTheme ? '#7c3aed' : '#c084fc';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // Generate 65 particles
+  for (let i = 0; i < 65; i++) {
+    particles.push(new Particle());
+  }
+
+  let animationFrameId;
+  function animateParticles() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach((p) => {
+      p.update();
+      p.draw();
+    });
+    animationFrameId = requestAnimationFrame(animateParticles);
+  }
+  animateParticles();
+
+  // 2. Realistic connection-integrated loading progress
+  let progress = 0;
+  let connectionEstablished = false;
+  let isOffline = false;
+
+  window.markWSConnected = function() {
+    connectionEstablished = true;
+  };
+
+  const progressInterval = setInterval(() => {
+    if (connectionEstablished) {
+      progress += Math.random() * 15 + 10;
+    } else if (progress < 65) {
+      progress += Math.random() * 3 + 1.5;
+    } else if (progress < 90) {
+      progress += Math.random() * 0.8 + 0.1;
+    }
+
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(progressInterval);
+      completeLoading();
+    }
+
+    const pct = Math.min(100, Math.floor(progress));
+    if (bar) bar.style.width = pct + '%';
+    if (percentText) percentText.textContent = pct + '%';
+  }, 50);
+
+  // Fallback timeout: if WebSocket takes longer than 3.0s, mark as offline/simulated
+  setTimeout(() => {
+    if (!connectionEstablished) {
+      isOffline = true;
+      connectionEstablished = true;
+    }
+  }, 3000);
+
+  function completeLoading() {
+    cancelAnimationFrame(animationFrameId);
+    if (splash) splash.classList.add('fade-out');
+    document.body.style.overflow = '';
+    setTimeout(() => {
+      if (splash) splash.remove();
+    }, 1200);
+  }
+})();
+
 // ===== THEME TOGGLE =====
 const themeBtn = document.getElementById('themeBtn');
 const html = document.documentElement;
@@ -1584,7 +1897,7 @@ initWaveform('waveform2', 30);
 function getBackendHost() {
   const saved = localStorage.getItem('matrisathi_backend_host');
   if (saved && saved.trim()) return saved.trim();
-  return window.location.host; // fallback to page origin
+  return window.location.host || 'localhost:8000'; // fallback to localhost:8000 if empty
 }
 
 function getBackendHttpBase() {
@@ -1679,21 +1992,28 @@ function reconnectBackend() {
 // ===== VIDEO FEED HANDLERS =====
 function onFeedLoad() {
   // Hide fallback emoji, show real camera stream
+  const img = document.getElementById('videoFeed');
+  if (img) img.style.display = 'block';
   const container = document.getElementById('feedEmojiContainer');
   if (container) container.style.display = 'none';
   console.log('[MatriSathi] Live video feed loaded from backend.');
 }
 
+// Global variable to keep track of reconnection check
+let feedRetryTimeout = null;
+
 function onFeedError() {
-  // Show fallback with helpful message
+  // Hide broken image placeholder box
+  const img = document.getElementById('videoFeed');
+  if (img) img.style.display = 'none';
   const container = document.getElementById('feedEmojiContainer');
   const statusMsg = document.getElementById('feedStatusMsg');
   if (container) container.style.display = 'flex';
   if (statusMsg) statusMsg.textContent = 'Backend offline — click ⚙️ to configure backend IP';
   // Retry the feed every 5 seconds
-  const img = document.getElementById('videoFeed');
-  if (img) {
-    setTimeout(() => {
+  if (img && !feedRetryTimeout) {
+    feedRetryTimeout = setTimeout(() => {
+      feedRetryTimeout = null;
       img.src = getBackendHttpBase() + '/video_feed?' + Date.now();
     }, 5000);
   }
@@ -1717,6 +2037,9 @@ function connectWebSocket() {
     console.log('Connected to MatriSathi WebSocket');
     updateConnStatus(true);
     showToast('🔗 Backend Connected', 'success');
+    if (typeof window.markWSConnected === 'function') {
+      window.markWSConnected();
+    }
   };
 
   socket.onmessage = (event) => {
