@@ -2,7 +2,7 @@
 
 <img src="assets/logo.png" alt="Matri Sathi Logo" width="120" height="120" style="border-radius: 20px;" />
 
-# 🍼 Matri Sathi
+#  Matri Sathi
 ### *AI-Powered Infant Guardian System*
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
