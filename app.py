@@ -401,6 +401,85 @@ CRY_MODEL_PATH = os.path.join("models", "infant_cry_detect.keras")
 cry_model = None
 cry_model_loaded = False
 
+def load_custom_cry_model(model_path):
+    import zipfile
+    import h5py
+    import tempfile
+    import keras
+    from keras import layers
+    import numpy as np
+
+    # 1. Build the functional architecture matching the original Keras 2.15 structure in Keras 3
+    inputs = keras.Input(shape=(310,), name="features")
+    
+    x = layers.BatchNormalization(axis=1, name="batch_normalization")(inputs)
+    x = layers.Dense(512, activation="relu", kernel_regularizer=keras.regularizers.l2(1e-4), name="dense")(x)
+    x = layers.BatchNormalization(axis=1, name="batch_normalization_1")(x)
+    x = layers.Dropout(0.4, name="dropout")(x)
+    
+    x = layers.Dense(256, activation="relu", kernel_regularizer=keras.regularizers.l2(1e-4), name="dense_1")(x)
+    x = layers.BatchNormalization(axis=1, name="batch_normalization_2")(x)
+    x = layers.Dropout(0.4, name="dropout_1")(x)
+    
+    x = layers.Dense(128, activation="relu", kernel_regularizer=keras.regularizers.l2(1e-4), name="dense_2")(x)
+    x = layers.BatchNormalization(axis=1, name="batch_normalization_3")(x)
+    x = layers.Dropout(0.4, name="dropout_2")(x)
+    
+    x = layers.Dense(64, activation="relu", name="dense_3")(x)
+    outputs = layers.Dense(10, activation="softmax", name="output")(x)
+    
+    model = keras.Model(inputs=inputs, outputs=outputs, name="InfantCry_DNN")
+
+    # 2. Extract model.weights.h5 and load into the model
+    with zipfile.ZipFile(model_path, 'r') as z:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            weights_tmp_path = z.extract("model.weights.h5", path=tmpdir)
+            
+            # Sequence of groups in HDF5 file containing weights
+            h5_groups = [
+                "layers\\batch_normalization/vars",
+                "layers\\dense/vars",
+                "layers\\batch_normalization_1/vars",
+                "layers\\dense_1/vars",
+                "layers\\batch_normalization_2/vars",
+                "layers\\dense_2/vars",
+                "layers\\batch_normalization_3/vars",
+                "layers\\dense_3/vars",
+                "layers\\dense_4/vars"
+            ]
+            
+            # Layers in model that have weights
+            model_layers = [
+                model.get_layer("batch_normalization"),
+                model.get_layer("dense"),
+                model.get_layer("batch_normalization_1"),
+                model.get_layer("dense_1"),
+                model.get_layer("batch_normalization_2"),
+                model.get_layer("dense_2"),
+                model.get_layer("batch_normalization_3"),
+                model.get_layer("dense_3"),
+                model.get_layer("output")
+            ]
+            
+            with h5py.File(weights_tmp_path, 'r') as f:
+                for g_idx, layer in enumerate(model_layers):
+                    # Check both backslash and forward slash styles in case of different OS saves
+                    g_name_bs = h5_groups[g_idx]
+                    g_name_fs = g_name_bs.replace("\\", "/")
+                    
+                    if g_name_bs in f:
+                        group = f[g_name_bs]
+                    elif g_name_fs in f:
+                        group = f[g_name_fs]
+                    else:
+                        raise KeyError(f"Could not find weights group for layer {layer.name} in h5 file.")
+                    
+                    ds_keys = sorted(group.keys(), key=int)
+                    weights = [np.array(group[k]) for k in ds_keys]
+                    layer.set_weights(weights)
+                    
+    return model
+
 @app.on_event("startup")
 def startup_event():
     global camera_worker, main_loop, cry_model, cry_model_loaded
@@ -415,6 +494,7 @@ def startup_event():
     # Load Infant Cry Model on startup
     try:
         import keras
+        import h5py
         keras_available = True
     except ImportError:
         keras_available = False
@@ -423,7 +503,7 @@ def startup_event():
         if os.path.exists(CRY_MODEL_PATH):
             print(f"Loading infant cry detection model from {CRY_MODEL_PATH} on startup...")
             try:
-                cry_model = keras.models.load_model(CRY_MODEL_PATH)
+                cry_model = load_custom_cry_model(CRY_MODEL_PATH)
                 cry_model_loaded = True
                 print("Infant cry detection model loaded successfully on startup!")
             except Exception as e:
@@ -431,7 +511,19 @@ def startup_event():
         else:
             print(f"WARNING: Cry model file not found at {CRY_MODEL_PATH}")
     else:
-        print("INFO: Keras/TensorFlow not installed. Cry detection will run in simulation mode.")
+        print("INFO: Keras/TensorFlow/h5py not installed. Cry detection will run in simulation mode.")
+
+    # Specify in terminal whether the cry model is loaded or demo model is used
+    print("\n" + "=" * 60)
+    if cry_model_loaded:
+        print("  CRY DETECTION MODEL STATUS: [LOADED]")
+        print(f"  Model File: {CRY_MODEL_PATH}")
+        print("  Real AI inference will be used for infant cry diagnostics.")
+    else:
+        print("  CRY DETECTION MODEL STATUS: [DEMO / SIMULATION MODE]")
+        print("  Using simulated prediction logic.")
+    print("=" * 60 + "\n")
+
 
 @app.on_event("shutdown")
 def shutdown_event():
@@ -516,23 +608,24 @@ async def predict_cry(file: UploadFile = File(...)):
         "Frustration / Overstimulation"
     ]
     
-    # Check if Keras and Librosa libraries are installed
+    # Check if Keras, Librosa, and h5py libraries are installed
     try:
         import librosa
         import keras
+        import h5py
         libs_available = True
     except ImportError:
         libs_available = False
 
     contents = await file.read()
     
-    # If Keras and Librosa are available, and the model exists, perform real inference
+    # If Keras, Librosa, and h5py are available, and the model exists, perform real inference
     if libs_available and os.path.exists(CRY_MODEL_PATH):
         try:
             # Lazy load the Keras model once and cache it in memory
             if not cry_model_loaded:
                 print(f"Loading infant cry detection model from {CRY_MODEL_PATH}...")
-                cry_model = keras.models.load_model(CRY_MODEL_PATH)
+                cry_model = load_custom_cry_model(CRY_MODEL_PATH)
                 cry_model_loaded = True
                 print("Infant cry detection model loaded successfully!")
             
